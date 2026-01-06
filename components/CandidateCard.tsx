@@ -99,15 +99,35 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
           #{globalNumber}
         </div>
         
-        {/* videoPathがURLの場合（Vercel環境で登録された場合）は埋め込みプレーヤーを使用 */}
+        {/* videoPathがURLの場合（Vercel環境で登録された場合）はサムネイル画像を表示 */}
         {candidate.videoPath.startsWith('http') ? (
-          <iframe
-            src={candidate.videoPath.replace('/video/', '/embed/video/')}
-            className="w-full h-full"
-            frameBorder="0"
-            allow="encrypted-media"
-            allowFullScreen
-          />
+          <a
+            href={candidate.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full h-full block relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* TikTokのサムネイル画像を表示（取得できない場合はプレースホルダー） */}
+            <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+              <div className="text-center text-white p-4">
+                <div className="text-4xl mb-2">🎵</div>
+                <div className="font-bold text-lg mb-1">TikTok動画</div>
+                <div className="text-sm opacity-90">クリックしてTikTokで開く</div>
+              </div>
+            </div>
+            {/* アイコン画像があれば表示 */}
+            {candidate.iconPath && candidate.iconPath !== '' && (
+              <img
+                src={candidate.iconPath}
+                alt={candidate.username}
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none'
+                }}
+              />
+            )}
+          </a>
         ) : (
           <>
             <video
