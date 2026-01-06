@@ -58,7 +58,7 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 ${
+      className={`bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 relative ${
         deleteMode ? '' : 'hover:shadow-xl hover:scale-[1.02]'
       } ${isSelected ? 'ring-4 ring-red-500' : ''}`}
       onMouseEnter={() => !deleteMode && setIsHovered(true)}
@@ -66,12 +66,13 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
     >
       {/* 削除モード時のチェックボックス */}
       {deleteMode && (
-        <div className="absolute top-2 left-2 z-20">
+        <div className="absolute top-3 left-3 z-30 bg-white rounded-md p-1 shadow-lg">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={onToggleSelect}
-            className="w-6 h-6 cursor-pointer"
+            className="w-6 h-6 cursor-pointer accent-red-600"
+            onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}
