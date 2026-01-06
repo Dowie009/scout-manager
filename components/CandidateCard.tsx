@@ -86,8 +86,9 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
       
       <div className="relative aspect-[9/16] bg-gray-100">
         {/* シャープナンバー（動画の左上に大きく表示、性別に応じて色を変更） */}
+        {/* 削除モード時は右側に表示してチェックボックスと重ならないように */}
         <div 
-          className={`absolute top-3 left-3 z-10 text-white px-3 py-1 rounded-md font-bold text-2xl shadow-lg ${
+          className={`absolute ${deleteMode ? 'top-3 right-3' : 'top-3 left-3'} z-10 text-white px-3 py-1 rounded-md font-bold text-2xl shadow-lg ${
             candidate.gender === 'female' 
               ? 'bg-pink-500 bg-opacity-90' 
               : candidate.gender === 'male'
