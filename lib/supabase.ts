@@ -1,12 +1,35 @@
 import { createClient } from '@supabase/supabase-js'
 import { Candidate } from './data'
 
-// 環境変数が空文字列の場合もデフォルト値を使用
-const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || 'https://mvucbeycbzhesbxxelbq.supabase.co').trim()
-const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || 'sb_publishable_ZbqRa2IWRVtAUm3YXHqZIw_8wWQgJeC').trim()
+// 環境変数の取得とデフォルト値の設定
+function getSupabaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  if (envUrl && envUrl.length > 0 && envUrl.startsWith('http')) {
+    return envUrl
+  }
+  // デフォルト値（Vercel環境変数が設定されていない場合）
+  return 'https://mvucbeycbzhesbxxelbq.supabase.co'
+}
 
-if (!supabaseUrl || supabaseUrl === '' || !supabaseKey || supabaseKey === '') {
-  throw new Error('Supabase環境変数が設定されていません。NEXT_PUBLIC_SUPABASE_URL と NEXT_PUBLIC_SUPABASE_ANON_KEY を設定してください。')
+function getSupabaseKey(): string {
+  const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
+  if (envKey && envKey.length > 0) {
+    return envKey
+  }
+  // デフォルト値（Vercel環境変数が設定されていない場合）
+  return 'sb_publishable_ZbqRa2IWRVtAUm3YXHqZIw_8wWQgJeC'
+}
+
+const supabaseUrl = getSupabaseUrl()
+const supabaseKey = getSupabaseKey()
+
+// URLの検証
+if (!supabaseUrl || !supabaseUrl.startsWith('http')) {
+  throw new Error(`Invalid supabaseUrl: ${supabaseUrl}. Must be a valid HTTP or HTTPS URL.`)
+}
+
+if (!supabaseKey || supabaseKey.length === 0) {
+  throw new Error('Supabase key is required')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
