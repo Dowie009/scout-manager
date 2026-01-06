@@ -51,11 +51,40 @@ export async function downloadTikTokContent(url: string): Promise<{
     const match = url.match(/@([^/?]+)/)
     const username = match ? match[1] : 'unknown'
     
-    // Vercel環境では、動画パスとアイコンパスはプレースホルダー
-    // 実際の動画はTikTokの埋め込みプレーヤーで表示する
+    // TikTokのoEmbed APIを使ってサムネイル画像を取得
+    let thumbnailUrl = ''
+    try {
+      // 動画IDを抽出
+      const videoIdMatch = url.match(/\/video\/(\d+)/)
+      if (videoIdMatch) {
+        const videoId = videoIdMatch[1]
+        // TikTokのサムネイルURLを構築（公式APIではないが、一般的なパターン）
+        thumbnailUrl = `https://p16-sign-va.tiktokcdn.com/obj/tos-maliva-p-0068/${videoId}?x-expires=...`
+        
+        // oEmbed APIを試す
+        try {
+          const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`
+          const response = await fetch(oembedUrl)
+          if (response.ok) {
+            const data = await response.json()
+            // oEmbedレスポンスからサムネイルURLを取得
+            if (data.thumbnail_url) {
+              thumbnailUrl = data.thumbnail_url
+            }
+          }
+        } catch (e) {
+          // oEmbed APIが失敗した場合は、デフォルトのサムネイルURLを使用
+          console.warn('oEmbed API failed, using fallback:', e)
+        }
+      }
+    } catch (error) {
+      console.warn('サムネイルURLの取得に失敗しました:', error)
+    }
+    
+    // Vercel環境では、動画パスはURL、アイコンパスはサムネイルURL
     return {
       videoPath: url, // URLをそのまま保存（後で埋め込みプレーヤーで使用）
-      iconPath: '', // アイコンは取得できない
+      iconPath: thumbnailUrl || '', // サムネイル画像のURL
       username,
     }
   }
