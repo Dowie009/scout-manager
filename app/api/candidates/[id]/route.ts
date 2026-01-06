@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { updateCandidate, deleteCandidate } from '@/lib/data'
+import { updateCandidate, deleteCandidate } from '@/lib/data-supabase'
 
 export async function PATCH(
   request: NextRequest,

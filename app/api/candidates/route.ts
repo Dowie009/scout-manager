@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCandidates, addCandidate, getCandidateByUrl } from '@/lib/data'
+import { getCandidates, addCandidate, getCandidateByUrl } from '@/lib/data-supabase'
 import { downloadTikTokContent } from '@/lib/download'
 
 export async function GET(request: NextRequest) {
