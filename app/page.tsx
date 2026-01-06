@@ -45,7 +45,7 @@ export default function Home() {
   }
 
   // 候補者の性別別ナンバーを取得（男性は#1から、女性も#1から）
-  const getGenderNumber = (candidateId: string, candidateGender?: string): number => {
+  const getGenderNumber = (candidateId: string, candidateGender?: 'male' | 'female' | 'other' | null): number => {
     if (!candidateGender || candidateGender === 'other') {
       // 性別が未設定またはその他の場合、全体の順番を使用
       const index = allCandidates.findIndex(c => c.id === candidateId)
