@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { Candidate } from './data'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mvucbeycbzhesbxxelbq.supabase.co'
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_ZbqRa2IWRVtAUm3YXHqZIw_8wWQgJeC'
+// 環境変数が空文字列の場合もデフォルト値を使用
+const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || 'https://mvucbeycbzhesbxxelbq.supabase.co').trim()
+const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || 'sb_publishable_ZbqRa2IWRVtAUm3YXHqZIw_8wWQgJeC').trim()
 
-if (!supabaseUrl || !supabaseKey) {
+if (!supabaseUrl || supabaseUrl === '' || !supabaseKey || supabaseKey === '') {
   throw new Error('Supabase環境変数が設定されていません。NEXT_PUBLIC_SUPABASE_URL と NEXT_PUBLIC_SUPABASE_ANON_KEY を設定してください。')
 }
 
