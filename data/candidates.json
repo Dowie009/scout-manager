@@ -1,0 +1,75 @@
+[
+  {
+    "url": "https://www.tiktok.com/@shineneiro/video/7583233560874634516?lang=ja-JP",
+    "username": "shineneiro",
+    "videoPath": "/assets/videos/video_1767693984142.mp4",
+    "iconPath": "/assets/icons/icon_1767693984142.jpg",
+    "status": "pass",
+    "memo": "",
+    "gender": "female",
+    "id": "1767693987740",
+    "createdAt": "2026-01-06T10:06:27.740Z",
+    "updatedAt": "2026-01-06T10:08:02.822Z"
+  },
+  {
+    "url": "https://www.tiktok.com/@utsugi_10/video/7574686887273860360?lang=ja-JP",
+    "username": "utsugi_10",
+    "videoPath": "/assets/videos/video_1767694301562.mp4",
+    "iconPath": "/assets/icons/icon_1767694301562.jpg",
+    "status": "pass",
+    "memo": "",
+    "gender": "female",
+    "id": "1767694304911",
+    "createdAt": "2026-01-06T10:11:44.911Z",
+    "updatedAt": "2026-01-06T10:19:41.072Z"
+  },
+  {
+    "url": "https://www.tiktok.com/@028sy_/video/7300956072976600322?lang=ja-JP",
+    "username": "028sy_",
+    "videoPath": "/assets/videos/video_1767694995697.mp4",
+    "iconPath": "/assets/icons/icon_1767694995697.jpg",
+    "status": "pass",
+    "memo": "",
+    "gender": "female",
+    "id": "1767694999546",
+    "createdAt": "2026-01-06T10:23:19.546Z",
+    "updatedAt": "2026-01-06T10:44:55.590Z"
+  },
+  {
+    "url": "https://www.tiktok.com/@kurage__0914/video/7306863792267267329?lang=ja-JP",
+    "username": "kurage__0914",
+    "videoPath": "/assets/videos/video_1767696350662.mp4",
+    "iconPath": "/assets/icons/icon_1767696350662.jpg",
+    "status": "pass",
+    "memo": "",
+    "gender": "female",
+    "id": "1767696353899",
+    "createdAt": "2026-01-06T10:45:53.899Z",
+    "updatedAt": "2026-01-06T10:46:28.679Z"
+  },
+  {
+    "url": "https://www.tiktok.com/@hiroto_sing1/video/7540600453461970194?lang=ja-JP",
+    "username": "hiroto_sing1",
+    "videoPath": "/assets/videos/video_1767696451917.mp4",
+    "iconPath": "/assets/icons/icon_1767696451917.jpg",
+    "status": "pass",
+    "memo": "",
+    "gender": "male",
+    "id": "1767696455515",
+    "createdAt": "2026-01-06T10:47:35.515Z",
+    "updatedAt": "2026-01-06T10:47:40.124Z"
+  },
+  {
+    "url": "https://www.tiktok.com/@ichinose_himari?lang=ja-JP",
+    "username": "ichinose_himari",
+    "videoPath": "/assets/videos/video_1767696473325.mp4",
+    "iconPath": "/assets/icons/icon_1767696473325.jpg",
+    "status": "contact",
+    "memo": "",
+    "gender": "female",
+    "id": "1767696642659",
+    "createdAt": "2026-01-06T10:50:42.659Z",
+    "updatedAt": "2026-01-06T11:02:52.001Z",
+    "contactStatus": "no_response"
+  }
+]
