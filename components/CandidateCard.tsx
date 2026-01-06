@@ -64,15 +64,22 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
       onMouseEnter={() => !deleteMode && setIsHovered(true)}
       onMouseLeave={() => !deleteMode && setIsHovered(false)}
     >
-      {/* 削除モード時のチェックボックス */}
+      {/* 削除モード時のチェックボックス - 大きく目立つように */}
       {deleteMode && (
-        <div className="absolute top-3 left-3 z-30 bg-white rounded-md p-1 shadow-lg">
+        <div 
+          className="absolute top-4 left-4 z-50 bg-white rounded-lg p-2 shadow-2xl border-2 border-red-500"
+          onClick={(e) => e.stopPropagation()}
+        >
           <input
             type="checkbox"
             checked={isSelected}
             onChange={onToggleSelect}
-            className="w-6 h-6 cursor-pointer accent-red-600"
-            onClick={(e) => e.stopPropagation()}
+            className="w-8 h-8 cursor-pointer accent-red-600 border-2 border-gray-300 rounded"
+            style={{ 
+              minWidth: '32px',
+              minHeight: '32px',
+              cursor: 'pointer'
+            }}
           />
         </div>
       )}
