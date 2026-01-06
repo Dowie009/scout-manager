@@ -9,8 +9,18 @@ const assetsDir = path.join(process.cwd(), 'public', 'assets')
 const videosDir = path.join(assetsDir, 'videos')
 const iconsDir = path.join(assetsDir, 'icons')
 
+// Vercel環境かどうかをチェック
+function isVercelEnvironment(): boolean {
+  return !!process.env.VERCEL
+}
+
 // yt-dlpのパスを取得（Homebrewでインストールされた場合のパスも含む）
 async function getYtDlpPath(): Promise<string> {
+  // Vercel環境ではyt-dlpは使用できない
+  if (isVercelEnvironment()) {
+    throw new Error('Vercel環境では動画ダウンロードは利用できません。ローカル環境で登録してください。')
+  }
+
   const possiblePaths = [
     'yt-dlp', // PATHにある場合
     '/opt/homebrew/bin/yt-dlp', // Homebrew (Apple Silicon)
@@ -35,6 +45,21 @@ export async function downloadTikTokContent(url: string): Promise<{
   iconPath: string
   username: string
 }> {
+  // Vercel環境では動画ダウンロードをスキップ
+  if (isVercelEnvironment()) {
+    // URLからユーザー名を抽出
+    const match = url.match(/@([^/?]+)/)
+    const username = match ? match[1] : 'unknown'
+    
+    // Vercel環境では、動画パスとアイコンパスはプレースホルダー
+    // 実際の動画はTikTokの埋め込みプレーヤーで表示する
+    return {
+      videoPath: url, // URLをそのまま保存（後で埋め込みプレーヤーで使用）
+      iconPath: '', // アイコンは取得できない
+      username,
+    }
+  }
+
   await fs.ensureDir(videosDir)
   await fs.ensureDir(iconsDir)
 

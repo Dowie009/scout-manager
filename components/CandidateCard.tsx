@@ -90,22 +90,35 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
           #{globalNumber}
         </div>
         
-        <video
-          ref={videoRef}
-          src={candidate.videoPath}
-          muted={isMuted}
-          loop
-          className="w-full h-full object-cover"
-        />
-        {!isHovered && (
-          <img
-            src={candidate.iconPath}
-            alt={candidate.username}
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none'
-            }}
+        {/* videoPathがURLの場合（Vercel環境で登録された場合）は埋め込みプレーヤーを使用 */}
+        {candidate.videoPath.startsWith('http') ? (
+          <iframe
+            src={candidate.videoPath.replace('/video/', '/embed/video/')}
+            className="w-full h-full"
+            frameBorder="0"
+            allow="encrypted-media"
+            allowFullScreen
           />
+        ) : (
+          <>
+            <video
+              ref={videoRef}
+              src={candidate.videoPath}
+              muted={isMuted}
+              loop
+              className="w-full h-full object-cover"
+            />
+            {!isHovered && (
+              <img
+                src={candidate.iconPath}
+                alt={candidate.username}
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none'
+                }}
+              />
+            )}
+          </>
         )}
       </div>
       
