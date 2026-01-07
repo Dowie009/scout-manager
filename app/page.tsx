@@ -307,7 +307,16 @@ export default function Home() {
   }
 
   const handleFinishReview = () => {
-    setIsModalOpen(true)
+    // Vercel環境（閲覧専用モード）では、連絡システムを起動
+    if (!isLocalEnvironment) {
+      // メール送信または連絡フォームを開く
+      const subject = encodeURIComponent('スカウト候補者レビュー完了のご連絡')
+      const body = encodeURIComponent(`レビューが完了しました。\n\nご確認をお願いいたします。`)
+      window.location.href = `mailto:your-email@example.com?subject=${subject}&body=${body}`
+    } else {
+      // ローカル環境では通常のモーダルを表示（ただし非表示なので実行されない）
+      setIsModalOpen(true)
+    }
   }
 
   const handleDeployToVercel = async () => {
@@ -349,6 +358,24 @@ export default function Home() {
           >
             📊 統計・グラフ
           </a>
+          {/* デプロイボタン（ローカル環境のみ表示） */}
+          {isLocalEnvironment && (
+            <button
+              onClick={handleDeployToVercel}
+              disabled={isDeploying}
+              className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 ${
+                isDeploying
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                  : 'bg-green-500 hover:bg-green-600 text-white'
+              }`}
+              title="Vercelにデプロイ"
+            >
+              <span className="text-lg">{isDeploying ? '⏳' : '☁️'}</span>
+              <span className="text-sm font-semibold">
+                {isDeploying ? 'デプロイ中...' : 'Vercelにデプロイ'}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -405,53 +432,20 @@ export default function Home() {
         </div>
       </div>
       
-      {/* 右上の固定ボタン（音声スイッチ + デプロイボタン） */}
-      <div className="fixed top-4 right-4 z-50 flex flex-col gap-3">
-        {/* 音声スイッチ */}
-        <div className="bg-white rounded-lg shadow-lg p-3 flex items-center gap-2 border-2 border-gray-200">
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 ${
-              isMuted
-                ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-            }`}
-            title={isMuted ? '音声をONにする' : '音声をOFFにする'}
-          >
-            <span className="text-xl">{isMuted ? '🔇' : '🔊'}</span>
-            <span className="text-sm font-semibold">{isMuted ? '音声OFF' : '音声ON'}</span>
-          </button>
-        </div>
-        
-        {/* デプロイボタン（ローカル環境のみ表示） */}
-        {isLocalEnvironment && (
-          <div className="bg-white rounded-lg shadow-lg p-3 border-2 border-gray-200">
-            <button
-              onClick={handleDeployToVercel}
-              disabled={isDeploying}
-              className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 w-full justify-center ${
-                isDeploying
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  : 'bg-green-500 hover:bg-green-600 text-white'
-              }`}
-              title="Vercelにデプロイ"
-            >
-              <span className="text-xl">{isDeploying ? '⏳' : '☁️'}</span>
-              <span className="text-sm font-semibold">
-                {isDeploying ? 'デプロイ中...' : 'Vercelにデプロイ'}
-              </span>
-            </button>
-            {deployMessage && (
-              <div className={`mt-2 p-2 rounded text-xs ${
-                deployMessage.includes('✅') 
-                  ? 'bg-green-50 text-green-700' 
-                  : 'bg-red-50 text-red-700'
-              }`}>
-                {deployMessage}
-              </div>
-            )}
-          </div>
-        )}
+      {/* 音声スイッチ（右上に固定） */}
+      <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg p-3 flex items-center gap-2 border-2 border-gray-200">
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 ${
+            isMuted
+              ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              : 'bg-blue-500 hover:bg-blue-600 text-white'
+          }`}
+          title={isMuted ? '音声をONにする' : '音声をOFFにする'}
+        >
+          <span className="text-xl">{isMuted ? '🔇' : '🔊'}</span>
+          <span className="text-sm font-semibold">{isMuted ? '音声OFF' : '音声ON'}</span>
+        </button>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -600,12 +594,7 @@ export default function Home() {
           <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 rounded-r">
             <div className="flex items-center gap-2">
               <span className="text-2xl">👁️</span>
-              <div>
-                <h3 className="font-bold text-blue-900 mb-1">閲覧専用モード</h3>
-                <p className="text-sm text-blue-800">
-                  この環境では候補者の閲覧・編集のみ可能です。新規登録はローカル環境で行ってください。
-                </p>
-              </div>
+              <h3 className="font-bold text-blue-900">閲覧専用モード</h3>
             </div>
           </div>
         )}
@@ -635,13 +624,15 @@ export default function Home() {
         )}
       </div>
 
-      {/* レビュー完了ボタン */}
-      <button
-        onClick={handleFinishReview}
-        className="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full shadow-lg font-medium transition-colors"
-      >
-        レビュー完了
-      </button>
+      {/* レビュー完了ボタン（Vercel環境のみ表示） */}
+      {!isLocalEnvironment && (
+        <button
+          onClick={handleFinishReview}
+          className="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full shadow-lg font-medium transition-colors z-40"
+        >
+          レビュー完了
+        </button>
+      )}
 
       {/* モーダル */}
       <FinishReviewModal

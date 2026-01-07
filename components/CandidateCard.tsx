@@ -21,6 +21,57 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
   const [isUpdatingContactStatus, setIsUpdatingContactStatus] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoUrl, setVideoUrl] = useState<string | null>(null) // Vercel環境用の動画URL
+  
+  // YouTube URLかどうかを判定（videoPathまたはurlをチェック）
+  const isYouTubeUrl = (): boolean => {
+    // videoPathとurlの両方をチェック
+    const videoPath = candidate.videoPath || ''
+    const url = candidate.url || ''
+    const isYouTube = videoPath.includes('youtube.com') || videoPath.includes('youtu.be') || 
+                      url.includes('youtube.com') || url.includes('youtu.be')
+    if (isYouTube) {
+      console.log('YouTube URL detected - videoPath:', videoPath, 'url:', url)
+    }
+    return isYouTube
+  }
+  
+  // YouTube URLから動画IDを抽出
+  const getYouTubeVideoId = (): string | null => {
+    // videoPathとurlの両方をチェック（urlを優先）
+    const urlToCheck = candidate.url || candidate.videoPath || ''
+    
+    // YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
+    const shortsMatch = urlToCheck.match(/youtube\.com\/shorts\/([^/?]+)/)
+    if (shortsMatch) {
+      console.log('YouTube Shorts video ID extracted:', shortsMatch[1])
+      return shortsMatch[1]
+    }
+    
+    // 通常のYouTube: https://www.youtube.com/watch?v=VIDEO_ID
+    const watchMatch = urlToCheck.match(/youtube\.com\/watch\?v=([^&]+)/)
+    if (watchMatch) {
+      console.log('YouTube video ID extracted:', watchMatch[1])
+      return watchMatch[1]
+    }
+    
+    // 短縮URL: https://youtu.be/VIDEO_ID
+    const shortMatch = urlToCheck.match(/youtu\.be\/([^/?]+)/)
+    if (shortMatch) {
+      console.log('YouTube short URL video ID extracted:', shortMatch[1])
+      return shortMatch[1]
+    }
+    
+    console.log('No YouTube video ID found - videoPath:', candidate.videoPath, 'url:', candidate.url)
+    return null
+  }
+  
+  // YouTube埋め込みURLを生成
+  const getYouTubeEmbedUrl = (): string | null => {
+    const videoId = getYouTubeVideoId()
+    if (!videoId) return null
+    // 自動再生を有効化（ただし、ブラウザのポリシーにより制限される場合あり）
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${videoId}&controls=1&modestbranding=1&rel=0&playsinline=1`
+  }
 
   // Vercel環境で登録された候補者の場合、動画URLを取得
   useEffect(() => {
@@ -139,8 +190,64 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
           </div>
         )}
         
-        {/* videoPathがURLの場合（Vercel環境で登録された場合）は、既存の動画ファイルを探す */}
-        {candidate.videoPath.startsWith('http') ? (
+        {/* デバッグ: URL情報を表示（開発環境のみ） */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="absolute bottom-0 left-0 bg-black/70 text-white text-xs p-1 z-50 max-w-full overflow-hidden">
+            <div>videoPath: {candidate.videoPath?.substring(0, 50)}...</div>
+            <div>url: {candidate.url?.substring(0, 50)}...</div>
+            <div>isYouTube: {isYouTubeUrl() ? 'YES' : 'NO'}</div>
+          </div>
+        )}
+        
+        {/* YouTube URLの場合は埋め込みプレーヤーを使用 */}
+        {isYouTubeUrl() ? (
+          <div className="w-full h-full relative">
+            {(() => {
+              const embedUrl = getYouTubeEmbedUrl()
+              const videoId = getYouTubeVideoId()
+              
+              if (!embedUrl || !videoId) {
+                return (
+                  <div className="w-full h-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                    <div className="text-center text-white p-4">
+                      <div className="text-4xl mb-2">📺</div>
+                      <div className="font-bold text-lg mb-1">YouTube動画</div>
+                      <div className="text-sm opacity-90">URLが無効です</div>
+                    </div>
+                  </div>
+                )
+              }
+              
+              // サムネイル画像（ホバーしていない時）
+              if (!isHovered) {
+                return (
+                  <img
+                    src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                    alt={candidate.username}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // サムネイルが取得できない場合はデフォルト画像
+                      (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                    }}
+                  />
+                )
+              }
+              
+              // ホバー時はYouTube埋め込みプレーヤーを表示
+              return (
+                <iframe
+                  key={`youtube-${videoId}-${isHovered}`}
+                  src={embedUrl}
+                  className="w-full h-full"
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  style={{ border: 'none' }}
+                  title="YouTube video player"
+                />
+              )
+            })()}
+          </div>
+        ) : candidate.videoPath.startsWith('http') ? (
           <div className="w-full h-full relative">
             {/* まず、既存の動画ファイルがあるか試す（Gitに含まれている場合） */}
             {/* 動画IDからファイル名を推測して試行 */}
