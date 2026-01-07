@@ -471,7 +471,7 @@ export default memo(CandidateCard, (prevProps, nextProps) => {
     prevProps.candidate.id === nextProps.candidate.id &&
     prevProps.candidate.status === nextProps.candidate.status &&
     prevProps.candidate.memo === nextProps.candidate.memo &&
-    prevProps.candidate.contactStatus === nextProps.contactStatus &&
+    prevProps.candidate.contactStatus === nextProps.candidate.contactStatus &&
     prevProps.isMuted === nextProps.isMuted &&
     prevProps.deleteMode === nextProps.deleteMode &&
     prevProps.isSelected === nextProps.isSelected &&
