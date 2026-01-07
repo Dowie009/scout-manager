@@ -80,7 +80,7 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
     <div
       className={`rounded-lg shadow-md overflow-hidden transition-all duration-300 relative ${
         candidate.hasReferrer
-          ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-4 border-yellow-400 shadow-2xl' // 紹介者がいる場合は特別なスタイル
+          ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-4 border-yellow-500 shadow-2xl ring-4 ring-yellow-300' // 紹介者がいる場合は特別なスタイル（縁取りを強調）
           : 'bg-white'
       } ${
         deleteMode ? '' : 'hover:shadow-xl hover:scale-[1.02]'
@@ -251,6 +251,14 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
             minute: '2-digit'
           })} 登録
         </div>
+        
+        {/* 紹介者メモ（紹介者がいる場合） */}
+        {candidate.hasReferrer && candidate.referrerMemo && (
+          <div className="mb-3 p-3 bg-yellow-100 border-l-4 border-yellow-500 rounded-r">
+            <div className="text-xs font-semibold text-yellow-800 mb-1">👤 紹介者メモ:</div>
+            <div className="text-sm text-yellow-900 whitespace-pre-wrap">{candidate.referrerMemo}</div>
+          </div>
+        )}
         
         {!deleteMode && (
           <div className="space-y-3">

@@ -75,6 +75,7 @@ export async function updateCandidate(id: string, updates: Partial<Candidate>): 
   if (updates.gender !== undefined) supabaseUpdates.gender = updates.gender
   if (updates.contactStatus !== undefined) supabaseUpdates.contact_status = updates.contactStatus
   if (updates.hasReferrer !== undefined) supabaseUpdates.has_referrer = updates.hasReferrer
+  if (updates.referrerName !== undefined) supabaseUpdates.referrer_name = updates.referrerName
   if (updates.referrerMemo !== undefined) supabaseUpdates.referrer_memo = updates.referrerMemo
 
   const { data, error } = await supabase

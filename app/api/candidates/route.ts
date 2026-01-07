@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { url, gender, hasReferrer, referrerMemo } = await request.json()
+    const { url, gender, hasReferrer, referrerName, referrerMemo } = await request.json()
     
     if (!url) {
       return NextResponse.json(
@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
       memo: '',
       gender: gender || null,
       hasReferrer: hasReferrer || false,
+      referrerName: referrerName || '',
       referrerMemo: referrerMemo || '',
     })
 

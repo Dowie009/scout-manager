@@ -12,6 +12,7 @@ export default function Home() {
   const [url, setUrl] = useState('')
   const [gender, setGender] = useState<'male' | 'female' | 'other' | null>('female') // デフォルトは女性
   const [hasReferrer, setHasReferrer] = useState(false) // 紹介者がいるかどうか
+  const [referrerName, setReferrerName] = useState('') // 紹介者名
   const [referrerMemo, setReferrerMemo] = useState('') // 紹介者メモ
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -170,6 +171,7 @@ export default function Home() {
             setUrl('')
             setGender('female') // 性別選択をデフォルト（女性）にリセット
             setHasReferrer(false) // 紹介者チェックをリセット
+            setReferrerName('') // 紹介者名をリセット
             setReferrerMemo('') // 紹介者メモをリセット
       await loadCandidates()
       await loadAllCandidates() // 新規登録後も全候補者リストを更新
@@ -476,6 +478,34 @@ export default function Home() {
                   <span className="text-sm text-gray-500">未設定（登録不可）</span>
                 </label>
               </div>
+            </div>
+            
+            {/* 紹介者情報 */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasReferrer}
+                  onChange={(e) => setHasReferrer(e.target.checked)}
+                  className="w-5 h-5 text-blue-600 rounded"
+                />
+                <span className="text-sm font-medium text-gray-700">👤 紹介者がいる</span>
+              </label>
+              
+              {hasReferrer && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    紹介者メモ:
+                  </label>
+                  <textarea
+                    value={referrerMemo}
+                    onChange={(e) => setReferrerMemo(e.target.value)}
+                    placeholder="紹介者の名前や連絡先、その他のメモを入力してください"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    rows={3}
+                  />
+                </div>
+              )}
             </div>
           </form>
           {error && (

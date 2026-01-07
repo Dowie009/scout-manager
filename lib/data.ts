@@ -16,6 +16,7 @@ export interface Candidate {
   gender?: Gender // 既存データとの互換性のためオプショナル
   contactStatus?: ContactStatus // 連絡するフォルダ内の詳細ステータス
   hasReferrer?: boolean // 紹介者がいるかどうか
+  referrerName?: string // 紹介者名
   referrerMemo?: string // 紹介者メモ
   createdAt: string
   updatedAt: string
