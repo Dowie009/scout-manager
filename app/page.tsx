@@ -147,7 +147,7 @@ export default function Home() {
       const response = await fetch('/api/candidates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, gender }),
+        body: JSON.stringify({ url, gender, hasReferrer, referrerName, referrerMemo }),
         signal: controller.signal,
       })
 
@@ -493,17 +493,31 @@ export default function Home() {
               </label>
               
               {hasReferrer && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    紹介者メモ:
-                  </label>
-                  <textarea
-                    value={referrerMemo}
-                    onChange={(e) => setReferrerMemo(e.target.value)}
-                    placeholder="紹介者の名前や連絡先、その他のメモを入力してください"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    rows={3}
-                  />
+                <div className="space-y-3 pl-7">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      紹介者名:
+                    </label>
+                    <input
+                      type="text"
+                      value={referrerName}
+                      onChange={(e) => setReferrerName(e.target.value)}
+                      placeholder="例: ベスタさん"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      紹介者メモ:
+                    </label>
+                    <textarea
+                      value={referrerMemo}
+                      onChange={(e) => setReferrerMemo(e.target.value)}
+                      placeholder="例: 学校の先生、ミュージシャン"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      rows={3}
+                    />
+                  </div>
                 </div>
               )}
             </div>

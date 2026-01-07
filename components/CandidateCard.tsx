@@ -119,15 +119,18 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
         {/* シャープナンバー（動画の左上に大きく表示、性別に応じて色を変更） */}
         {/* 削除モード時は右側に表示してチェックボックスと重ならないように */}
         <div 
-          className={`absolute ${deleteMode ? 'top-3 right-3' : 'top-3 left-3'} z-10 text-white px-3 py-1 rounded-md font-bold text-2xl shadow-lg ${
+          className={`absolute ${deleteMode ? 'top-3 right-3' : 'top-3 left-3'} z-10 flex items-center gap-2 ${
             candidate.gender === 'female' 
               ? 'bg-pink-500 bg-opacity-90' 
               : candidate.gender === 'male'
               ? 'bg-blue-500 bg-opacity-90'
               : 'bg-gray-500 bg-opacity-90'
-          }`}
+          } text-white px-3 py-1 rounded-md font-bold text-2xl shadow-lg`}
         >
-          #{globalNumber}
+          <span>#{globalNumber}</span>
+          {candidate.hasReferrer && (
+            <span className="text-sm font-bold bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded">直接紹介</span>
+          )}
         </div>
         
         {/* videoPathがURLの場合（Vercel環境で登録された場合）は、既存の動画ファイルを探す */}
@@ -171,12 +174,15 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
                   </>
                 )
               } else {
-                // アイコンパスが空またはURLの場合
+                // アイコンパスが空またはURLの場合（Vercel環境で登録された場合）
                 return (
                   <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
                     <div className="text-center text-white p-4">
                       <div className="text-4xl mb-2">🎵</div>
                       <div className="font-bold text-lg mb-1">TikTok動画</div>
+                      <div className="text-xs opacity-90 mb-2">
+                        ⚠️ 動画ファイル未ダウンロード
+                      </div>
                       <div className="text-sm opacity-90">
                         {isHovered ? 'クリックしてTikTokで開く' : 'ホバーで開く'}
                       </div>
@@ -252,11 +258,19 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
           })} 登録
         </div>
         
-        {/* 紹介者メモ（紹介者がいる場合） */}
-        {candidate.hasReferrer && candidate.referrerMemo && (
+        {/* 紹介者情報（紹介者がいる場合） */}
+        {candidate.hasReferrer && (
           <div className="mb-3 p-3 bg-yellow-100 border-l-4 border-yellow-500 rounded-r">
-            <div className="text-xs font-semibold text-yellow-800 mb-1">👤 紹介者メモ:</div>
-            <div className="text-sm text-yellow-900 whitespace-pre-wrap">{candidate.referrerMemo}</div>
+            {candidate.referrerName && (
+              <div className="text-sm font-bold text-yellow-900 mb-1">
+                紹介者: {candidate.referrerName}
+              </div>
+            )}
+            {candidate.referrerMemo && (
+              <div className="text-sm text-yellow-800 whitespace-pre-wrap">
+                {candidate.referrerMemo}
+              </div>
+            )}
           </div>
         )}
         
