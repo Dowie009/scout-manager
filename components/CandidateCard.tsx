@@ -78,12 +78,23 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 relative ${
+      className={`rounded-lg shadow-md overflow-hidden transition-all duration-300 relative ${
+        candidate.hasReferrer
+          ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-4 border-yellow-400 shadow-2xl' // 紹介者がいる場合は特別なスタイル
+          : 'bg-white'
+      } ${
         deleteMode ? '' : 'hover:shadow-xl hover:scale-[1.02]'
       } ${isSelected ? 'ring-4 ring-red-500' : ''}`}
       onMouseEnter={() => !deleteMode && setIsHovered(true)}
       onMouseLeave={() => !deleteMode && setIsHovered(false)}
     >
+      {/* 紹介者がいる場合のバッジ */}
+      {candidate.hasReferrer && (
+        <div className="absolute top-2 right-2 z-30 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
+          <span>⭐</span>
+          <span>紹介者あり</span>
+        </div>
+      )}
       {/* 削除モード時のチェックボックス - 大きく目立つように */}
       {deleteMode && (
         <div 

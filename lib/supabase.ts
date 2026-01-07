@@ -46,6 +46,8 @@ export function mapSupabaseToCandidate(row: any): Candidate {
     memo: row.memo || '',
     gender: row.gender || null,
     contactStatus: row.contact_status || null,
+    hasReferrer: row.has_referrer || false,
+    referrerMemo: row.referrer_memo || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -62,5 +64,7 @@ export function mapCandidateToSupabase(candidate: Omit<Candidate, 'id' | 'create
     memo: candidate.memo || '',
     gender: candidate.gender || null,
     contact_status: candidate.contactStatus || null,
+    has_referrer: candidate.hasReferrer || false,
+    referrer_memo: candidate.referrerMemo || '',
   }
 }

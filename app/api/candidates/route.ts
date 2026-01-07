@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { url, gender } = await request.json()
+    const { url, gender, hasReferrer, referrerMemo } = await request.json()
     
     if (!url) {
       return NextResponse.json(
@@ -63,6 +63,8 @@ export async function POST(request: NextRequest) {
       status: 'unreviewed',
       memo: '',
       gender: gender || null,
+      hasReferrer: hasReferrer || false,
+      referrerMemo: referrerMemo || '',
     })
 
     return NextResponse.json(candidate)

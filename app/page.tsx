@@ -11,6 +11,8 @@ export default function Home() {
   const [currentStatus, setCurrentStatus] = useState<'unreviewed' | 'contact' | 'stay' | 'pass'>('unreviewed')
   const [url, setUrl] = useState('')
   const [gender, setGender] = useState<'male' | 'female' | 'other' | null>('female') // デフォルトは女性
+  const [hasReferrer, setHasReferrer] = useState(false) // 紹介者がいるかどうか
+  const [referrerMemo, setReferrerMemo] = useState('') // 紹介者メモ
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -167,6 +169,8 @@ export default function Home() {
 
             setUrl('')
             setGender('female') // 性別選択をデフォルト（女性）にリセット
+            setHasReferrer(false) // 紹介者チェックをリセット
+            setReferrerMemo('') // 紹介者メモをリセット
       await loadCandidates()
       await loadAllCandidates() // 新規登録後も全候補者リストを更新
       setAbortController(null)
