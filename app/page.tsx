@@ -126,6 +126,13 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 性別が選択されていない場合はエラー
+    if (gender === null) {
+      setError('性別を選択してください')
+      return
+    }
+    
     setIsLoading(true)
     setError('')
 
@@ -462,7 +469,7 @@ export default function Home() {
                     onChange={() => setGender(null)}
                     className="w-4 h-4 text-gray-400"
                   />
-                  <span className="text-sm text-gray-500">未設定</span>
+                  <span className="text-sm text-gray-500">未設定（登録不可）</span>
                 </label>
               </div>
             </div>
