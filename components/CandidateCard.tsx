@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo } from 'react'
 import { Candidate } from '@/lib/data'
 
 interface CandidateCardProps {
@@ -14,7 +14,7 @@ interface CandidateCardProps {
   onToggleSelect: () => void // 選択の切り替え
 }
 
-export default function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, globalNumber, deleteMode, isSelected, onToggleSelect }: CandidateCardProps) {
+function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, globalNumber, deleteMode, isSelected, onToggleSelect }: CandidateCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [memo, setMemo] = useState('')
   const [isJudging, setIsJudging] = useState(false)
@@ -27,12 +27,8 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
     // videoPathとurlの両方をチェック
     const videoPath = candidate.videoPath || ''
     const url = candidate.url || ''
-    const isYouTube = videoPath.includes('youtube.com') || videoPath.includes('youtu.be') || 
-                      url.includes('youtube.com') || url.includes('youtu.be')
-    if (isYouTube) {
-      console.log('YouTube URL detected - videoPath:', videoPath, 'url:', url)
-    }
-    return isYouTube
+    return videoPath.includes('youtube.com') || videoPath.includes('youtu.be') || 
+           url.includes('youtube.com') || url.includes('youtu.be')
   }
   
   // YouTube URLから動画IDを抽出
@@ -42,26 +38,16 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
     
     // YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
     const shortsMatch = urlToCheck.match(/youtube\.com\/shorts\/([^/?]+)/)
-    if (shortsMatch) {
-      console.log('YouTube Shorts video ID extracted:', shortsMatch[1])
-      return shortsMatch[1]
-    }
+    if (shortsMatch) return shortsMatch[1]
     
     // 通常のYouTube: https://www.youtube.com/watch?v=VIDEO_ID
     const watchMatch = urlToCheck.match(/youtube\.com\/watch\?v=([^&]+)/)
-    if (watchMatch) {
-      console.log('YouTube video ID extracted:', watchMatch[1])
-      return watchMatch[1]
-    }
+    if (watchMatch) return watchMatch[1]
     
     // 短縮URL: https://youtu.be/VIDEO_ID
     const shortMatch = urlToCheck.match(/youtu\.be\/([^/?]+)/)
-    if (shortMatch) {
-      console.log('YouTube short URL video ID extracted:', shortMatch[1])
-      return shortMatch[1]
-    }
+    if (shortMatch) return shortMatch[1]
     
-    console.log('No YouTube video ID found - videoPath:', candidate.videoPath, 'url:', candidate.url)
     return null
   }
   
@@ -190,14 +176,6 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
           </div>
         )}
         
-        {/* デバッグ: URL情報を表示（開発環境のみ） */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="absolute bottom-0 left-0 bg-black/70 text-white text-xs p-1 z-50 max-w-full overflow-hidden">
-            <div>videoPath: {candidate.videoPath?.substring(0, 50)}...</div>
-            <div>url: {candidate.url?.substring(0, 50)}...</div>
-            <div>isYouTube: {isYouTubeUrl() ? 'YES' : 'NO'}</div>
-          </div>
-        )}
         
         {/* YouTube URLの場合は埋め込みプレーヤーを使用 */}
         {isYouTubeUrl() ? (
@@ -485,3 +463,18 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
     </div>
   )
 }
+
+// React.memoでメモ化（不要な再レンダリングを防ぐ）
+export default memo(CandidateCard, (prevProps, nextProps) => {
+  // 重要なプロップのみ比較
+  return (
+    prevProps.candidate.id === nextProps.candidate.id &&
+    prevProps.candidate.status === nextProps.candidate.status &&
+    prevProps.candidate.memo === nextProps.candidate.memo &&
+    prevProps.candidate.contactStatus === nextProps.contactStatus &&
+    prevProps.isMuted === nextProps.isMuted &&
+    prevProps.deleteMode === nextProps.deleteMode &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.globalNumber === nextProps.globalNumber
+  )
+})

@@ -2,15 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCandidates, addCandidate, getCandidateByUrl } from '@/lib/data-supabase'
 import { downloadTikTokContent } from '@/lib/download'
 
+// キャッシュ設定（60秒）
+export const revalidate = 60
+
 export async function GET(request: NextRequest) {
-  const status = request.nextUrl.searchParams.get('status')
-  const candidates = await getCandidates()
-  
-  if (status) {
-    return NextResponse.json(candidates.filter(c => c.status === status))
+  try {
+    const status = request.nextUrl.searchParams.get('status')
+    const candidates = await getCandidates()
+    
+    const filtered = status 
+      ? candidates.filter(c => c.status === status)
+      : candidates
+    
+    // キャッシュヘッダーを設定
+    return NextResponse.json(filtered, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'データの取得に失敗しました' },
+      { status: 500 }
+    )
   }
-  
-  return NextResponse.json(candidates)
 }
 
 export async function POST(request: NextRequest) {

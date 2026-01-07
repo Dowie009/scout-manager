@@ -43,10 +43,28 @@ export default function Home() {
     loadAllCandidates() // 全候補者を読み込んでナンバー計算用に使用
   }, [currentStatus, sortOrder])
 
+  // データのプリフェッチ（ページ読み込み時に事前取得）
+  useEffect(() => {
+    // 主要なAPIエンドポイントを事前に取得
+    const prefetchData = async () => {
+      try {
+        await fetch('/api/candidates?status=unreviewed', { method: 'HEAD' })
+        await fetch('/api/candidates?status=contact', { method: 'HEAD' })
+      } catch (error) {
+        // エラーは無視（プリフェッチなので）
+      }
+    }
+    prefetchData()
+  }, [])
+
   // 全候補者を読み込んで、全体での登録順を計算
   const loadAllCandidates = async () => {
     try {
-      const response = await fetch('/api/candidates')
+      // キャッシュを活用
+      const response = await fetch('/api/candidates', {
+        cache: 'force-cache',
+        next: { revalidate: 60 },
+      })
       const data = await response.json()
       // 登録順（古い順）でソート
       const sorted = data.sort((a: Candidate, b: Candidate) => {
@@ -115,7 +133,11 @@ export default function Home() {
 
   const loadCandidates = async () => {
     try {
-      const response = await fetch(`/api/candidates?status=${currentStatus}`)
+      // キャッシュを活用（ブラウザのキャッシュを使用）
+      const response = await fetch(`/api/candidates?status=${currentStatus}`, {
+        cache: 'force-cache', // キャッシュを優先
+        next: { revalidate: 60 }, // 60秒後に再検証
+      })
       const data = await response.json()
       // ソート順に応じてソート
       const sortedData = data.sort((a: Candidate, b: Candidate) => {
@@ -310,9 +332,10 @@ export default function Home() {
     // Vercel環境（閲覧専用モード）では、連絡システムを起動
     if (!isLocalEnvironment) {
       // メール送信または連絡フォームを開く
+      const email = 'mashibamashiba@gmail.com'
       const subject = encodeURIComponent('スカウト候補者レビュー完了のご連絡')
       const body = encodeURIComponent(`レビューが完了しました。\n\nご確認をお願いいたします。`)
-      window.location.href = `mailto:your-email@example.com?subject=${subject}&body=${body}`
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`
     } else {
       // ローカル環境では通常のモーダルを表示（ただし非表示なので実行されない）
       setIsModalOpen(true)
@@ -346,8 +369,29 @@ export default function Home() {
 
   const filteredCandidates = candidates.filter(c => c.status === currentStatus)
 
+  // ローディング状態を管理
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+
+  useEffect(() => {
+    // 初回読み込み完了後、ローディング状態を解除
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false)
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* 初回ローディング表示 */}
+      {isInitialLoading && (
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 text-lg">読み込み中...</p>
+            <p className="text-gray-400 text-sm mt-2">初回アクセス時は数秒かかることがあります</p>
+          </div>
+        </div>
+      )}
       {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-4">
