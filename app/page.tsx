@@ -27,6 +27,8 @@ export default function Home() {
   const [abortController, setAbortController] = useState<AbortController | null>(null) // ローディングキャンセル用
   const [isHoveringLoading, setIsHoveringLoading] = useState(false) // ローディングボタンにホバー中か
   const [isLocalEnvironment, setIsLocalEnvironment] = useState(false) // ローカル環境かどうか
+  const [isDeploying, setIsDeploying] = useState(false) // デプロイ中かどうか
+  const [deployMessage, setDeployMessage] = useState('') // デプロイメッセージ
 
   // 環境判定（ローカル環境かどうか）
   useEffect(() => {
@@ -308,6 +310,31 @@ export default function Home() {
     setIsModalOpen(true)
   }
 
+  const handleDeployToVercel = async () => {
+    setIsDeploying(true)
+    setDeployMessage('')
+    
+    try {
+      const response = await fetch('/api/deploy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        setDeployMessage('✅ デプロイが開始されました！Vercelで確認してください。')
+      } else {
+        setDeployMessage(`❌ エラー: ${data.message || 'デプロイに失敗しました'}`)
+      }
+    } catch (error: any) {
+      setDeployMessage(`❌ エラー: ${error.message || 'デプロイに失敗しました'}`)
+    } finally {
+      setIsDeploying(false)
+    }
+  }
+
   const filteredCandidates = candidates.filter(c => c.status === currentStatus)
 
   return (
@@ -378,20 +405,53 @@ export default function Home() {
         </div>
       </div>
       
-      {/* 音声スイッチ（右上に固定） */}
-      <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg p-3 flex items-center gap-2 border-2 border-gray-200">
-        <button
-          onClick={() => setIsMuted(!isMuted)}
-          className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 ${
-            isMuted
-              ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
-          }`}
-          title={isMuted ? '音声をONにする' : '音声をOFFにする'}
-        >
-          <span className="text-xl">{isMuted ? '🔇' : '🔊'}</span>
-          <span className="text-sm font-semibold">{isMuted ? '音声OFF' : '音声ON'}</span>
-        </button>
+      {/* 右上の固定ボタン（音声スイッチ + デプロイボタン） */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-3">
+        {/* 音声スイッチ */}
+        <div className="bg-white rounded-lg shadow-lg p-3 flex items-center gap-2 border-2 border-gray-200">
+          <button
+            onClick={() => setIsMuted(!isMuted)}
+            className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 ${
+              isMuted
+                ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+            title={isMuted ? '音声をONにする' : '音声をOFFにする'}
+          >
+            <span className="text-xl">{isMuted ? '🔇' : '🔊'}</span>
+            <span className="text-sm font-semibold">{isMuted ? '音声OFF' : '音声ON'}</span>
+          </button>
+        </div>
+        
+        {/* デプロイボタン（ローカル環境のみ表示） */}
+        {isLocalEnvironment && (
+          <div className="bg-white rounded-lg shadow-lg p-3 border-2 border-gray-200">
+            <button
+              onClick={handleDeployToVercel}
+              disabled={isDeploying}
+              className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 w-full justify-center ${
+                isDeploying
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                  : 'bg-green-500 hover:bg-green-600 text-white'
+              }`}
+              title="Vercelにデプロイ"
+            >
+              <span className="text-xl">{isDeploying ? '⏳' : '☁️'}</span>
+              <span className="text-sm font-semibold">
+                {isDeploying ? 'デプロイ中...' : 'Vercelにデプロイ'}
+              </span>
+            </button>
+            {deployMessage && (
+              <div className={`mt-2 p-2 rounded text-xs ${
+                deployMessage.includes('✅') 
+                  ? 'bg-green-50 text-green-700' 
+                  : 'bg-red-50 text-red-700'
+              }`}>
+                {deployMessage}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

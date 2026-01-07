@@ -119,7 +119,7 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
         {/* シャープナンバー（動画の左上に大きく表示、性別に応じて色を変更） */}
         {/* 削除モード時は右側に表示してチェックボックスと重ならないように */}
         <div 
-          className={`absolute ${deleteMode ? 'top-3 right-3' : 'top-3 left-3'} z-10 flex items-center gap-2 ${
+          className={`absolute ${deleteMode ? 'top-3 right-3' : 'top-3 left-3'} z-10 ${
             candidate.gender === 'female' 
               ? 'bg-pink-500 bg-opacity-90' 
               : candidate.gender === 'male'
@@ -127,11 +127,17 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
               : 'bg-gray-500 bg-opacity-90'
           } text-white px-3 py-1 rounded-md font-bold text-2xl shadow-lg`}
         >
-          <span>#{globalNumber}</span>
-          {candidate.hasReferrer && (
-            <span className="text-sm font-bold bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded">直接紹介</span>
-          )}
+          #{globalNumber}
         </div>
+        
+        {/* 紹介者バッジ（シャープナンバーの下に配置） */}
+        {candidate.hasReferrer && !deleteMode && (
+          <div 
+            className={`absolute ${deleteMode ? 'top-16 right-3' : 'top-16 left-3'} z-10`}
+          >
+            <span className="text-xs font-bold bg-yellow-400 text-yellow-900 px-2 py-1 rounded shadow-md">直接紹介</span>
+          </div>
+        )}
         
         {/* videoPathがURLの場合（Vercel環境で登録された場合）は、既存の動画ファイルを探す */}
         {candidate.videoPath.startsWith('http') ? (
