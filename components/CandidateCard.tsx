@@ -9,12 +9,13 @@ interface CandidateCardProps {
   onUpdateContactStatus?: (id: string, contactStatus: 'contacted' | 'no_response' | 'in_progress') => void
   isMuted: boolean // 全体の音声設定を受け取る
   globalNumber: number // 全体での登録順ナンバー
+  genderNumber: number // 性別ごとのナンバー
   deleteMode: boolean // 削除モードかどうか
   isSelected: boolean // 選択されているかどうか
   onToggleSelect: () => void // 選択の切り替え
 }
 
-function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, globalNumber, deleteMode, isSelected, onToggleSelect }: CandidateCardProps) {
+function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, globalNumber, genderNumber, deleteMode, isSelected, onToggleSelect }: CandidateCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [memo, setMemo] = useState('')
   const [isJudging, setIsJudging] = useState(false)
