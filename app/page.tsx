@@ -444,33 +444,33 @@ export default function Home() {
               </select>
             </label>
             
-            {/* 表示モード切り替え（NGフォルダのみ表示） */}
-            {currentStatus === 'pass' && (
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'grid'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  title="グリッド表示"
-                >
-                  <span className="text-lg">⊞</span>
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'list'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  title="リスト表示"
-                >
-                  <span className="text-lg">☰</span>
-                </button>
-              </div>
-            )}
+            {/* 表示モード切り替え（全ホルダーに表示） */}
+            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title="グリッド表示（大）"
+              >
+                <span className="text-lg">⊞</span>
+                <span className="text-xs font-bold">大</span>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+                  viewMode === 'list'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title="リスト表示（小）"
+              >
+                <span className="text-lg">☰</span>
+                <span className="text-xs font-bold">小</span>
+              </button>
+            </div>
           </div>
           
           <div className="flex items-center gap-3">
@@ -675,8 +675,8 @@ export default function Home() {
         )}
 
         {/* 候補者表示 */}
-        {currentStatus === 'pass' && viewMode === 'list' ? (
-          // リスト表示（NGフォルダのみ）
+        {viewMode === 'list' ? (
+          // リスト表示（全ホルダー対応）
           <div className="space-y-3">
             {filteredCandidates.map((candidate) => (
               <div
