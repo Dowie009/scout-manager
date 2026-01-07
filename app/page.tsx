@@ -29,6 +29,7 @@ export default function Home() {
   const [isLocalEnvironment, setIsLocalEnvironment] = useState(false) // ローカル環境かどうか
   const [isDeploying, setIsDeploying] = useState(false) // デプロイ中かどうか
   const [deployMessage, setDeployMessage] = useState('') // デプロイメッセージ
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid') // 表示モード（グリッド or リスト）
 
   // 環境判定（ローカル環境かどうか）
   useEffect(() => {
@@ -430,7 +431,7 @@ export default function Home() {
       {/* 削除モードとソート機能のヘッダー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <span>ソート:</span>
               <select
@@ -442,6 +443,34 @@ export default function Home() {
                 <option value="newest">最新順</option>
               </select>
             </label>
+            
+            {/* 表示モード切り替え（NGフォルダのみ表示） */}
+            {currentStatus === 'pass' && (
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="グリッド表示"
+                >
+                  <span className="text-lg">⊞</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="リスト表示"
+                >
+                  <span className="text-lg">☰</span>
+                </button>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-3">
@@ -645,23 +674,139 @@ export default function Home() {
           </div>
         )}
 
-        {/* 候補者グリッド */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredCandidates.map((candidate) => (
-            <div key={candidate.id}>
-              <CandidateCard 
-                candidate={candidate} 
-                onJudge={handleJudge}
-                onUpdateContactStatus={candidate.status === 'contact' ? handleUpdateContactStatus : undefined}
-                isMuted={isMuted}
-                globalNumber={getGenderNumber(candidate.id, candidate.gender)}
-                deleteMode={deleteMode}
-                isSelected={selectedIds.includes(candidate.id)}
-                onToggleSelect={() => handleToggleSelect(candidate.id)}
-              />
-            </div>
-          ))}
-        </div>
+        {/* 候補者表示 */}
+        {currentStatus === 'pass' && viewMode === 'list' ? (
+          // リスト表示（NGフォルダのみ）
+          <div className="space-y-3">
+            {filteredCandidates.map((candidate) => (
+              <div
+                key={candidate.id}
+                className={`bg-white rounded-lg shadow-md p-4 flex items-center gap-4 hover:shadow-lg transition-shadow ${
+                  deleteMode && selectedIds.includes(candidate.id) ? 'ring-4 ring-red-500' : ''
+                }`}
+              >
+                {/* 削除モード時のチェックボックス */}
+                {deleteMode && (
+                  <div 
+                    className="flex-shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(candidate.id)}
+                      onChange={() => handleToggleSelect(candidate.id)}
+                      className="w-6 h-6 cursor-pointer accent-red-600 border-2 border-gray-300 rounded"
+                    />
+                  </div>
+                )}
+                
+                {/* サムネイル */}
+                <div className="w-20 h-32 sm:w-24 sm:h-36 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 relative">
+                  {candidate.iconPath && candidate.iconPath !== '' && !candidate.iconPath.startsWith('http') ? (
+                    <img
+                      src={candidate.iconPath}
+                      alt={candidate.username}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                      <span className="text-2xl">🎵</span>
+                    </div>
+                  )}
+                  {/* シャープナンバー */}
+                  <div 
+                    className={`absolute top-1 left-1 text-white px-2 py-0.5 rounded text-xs font-bold ${
+                      candidate.gender === 'female' 
+                        ? 'bg-pink-500' 
+                        : candidate.gender === 'male'
+                        ? 'bg-blue-500'
+                        : 'bg-gray-500'
+                    }`}
+                  >
+                    #{getGenderNumber(candidate.id, candidate.gender)}
+                  </div>
+                  {candidate.hasReferrer && (
+                    <div className="absolute top-1 right-1">
+                      <span className="text-xs font-bold bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded shadow-md">⭐</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* 情報 */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h3 className="font-semibold text-lg text-gray-900 truncate">{candidate.username}</h3>
+                    {candidate.hasReferrer && (
+                      <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded flex-shrink-0">⭐ 紹介者</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500 mb-2">
+                    {new Date(candidate.createdAt).toLocaleString('ja-JP', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })} 登録
+                  </div>
+                  {candidate.memo && (
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">{candidate.memo}</p>
+                  )}
+                  {candidate.hasReferrer && candidate.referrerName && (
+                    <div className="text-xs text-yellow-700 mb-1">
+                      <span className="font-semibold">紹介者:</span> {candidate.referrerName}
+                    </div>
+                  )}
+                  {candidate.hasReferrer && candidate.referrerMemo && (
+                    <div className="text-xs text-yellow-800 bg-yellow-50 p-2 rounded border-l-2 border-yellow-400">
+                      {candidate.referrerMemo}
+                    </div>
+                  )}
+                </div>
+                
+                {/* アクション */}
+                <div className="flex-shrink-0 flex flex-col gap-2">
+                  <a
+                    href={candidate.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-md font-medium transition-colors flex items-center justify-center gap-1"
+                  >
+                    <span>🔗</span>
+                    <span className="hidden sm:inline">プロフィール</span>
+                  </a>
+                  {!deleteMode && (
+                    <button
+                      onClick={() => handleDelete(candidate.id)}
+                      className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-md font-medium transition-colors"
+                    >
+                      🗑️ 削除
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // グリッド表示（通常）
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredCandidates.map((candidate) => (
+              <div key={candidate.id}>
+                <CandidateCard 
+                  candidate={candidate} 
+                  onJudge={handleJudge}
+                  onUpdateContactStatus={candidate.status === 'contact' ? handleUpdateContactStatus : undefined}
+                  isMuted={isMuted}
+                  globalNumber={getGenderNumber(candidate.id, candidate.gender)}
+                  genderNumber={getGenderNumber(candidate.id, candidate.gender)}
+                  deleteMode={deleteMode}
+                  isSelected={selectedIds.includes(candidate.id)}
+                  onToggleSelect={() => handleToggleSelect(candidate.id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         {filteredCandidates.length === 0 && (
           <div className="text-center py-12 text-gray-500">
