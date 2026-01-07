@@ -394,32 +394,34 @@ export default function Home() {
       )}
       {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-4">
-          <h1 className="text-xl font-bold text-gray-900">スカウト候補者管理</h1>
-          <a
-            href="/stats"
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
-          >
-            📊 統計・グラフ
-          </a>
-          {/* デプロイボタン（ローカル環境のみ表示） */}
-          {isLocalEnvironment && (
-            <button
-              onClick={handleDeployToVercel}
-              disabled={isDeploying}
-              className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 ${
-                isDeploying
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  : 'bg-green-500 hover:bg-green-600 text-white'
-              }`}
-              title="Vercelにデプロイ"
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href="/stats"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors text-sm sm:text-base"
             >
-              <span className="text-lg">{isDeploying ? '⏳' : '☁️'}</span>
-              <span className="text-sm font-semibold">
-                {isDeploying ? 'デプロイ中...' : 'Vercelにデプロイ'}
-              </span>
-            </button>
-          )}
+              📊 統計・グラフ
+            </a>
+            {/* デプロイボタン（ローカル環境のみ表示） */}
+            {isLocalEnvironment && (
+              <button
+                onClick={handleDeployToVercel}
+                disabled={isDeploying}
+                className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 text-sm sm:text-base ${
+                  isDeploying
+                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+                title="Vercelにデプロイ"
+              >
+                <span className="text-lg">{isDeploying ? '⏳' : '☁️'}</span>
+                <span className="text-sm font-semibold">
+                  {isDeploying ? 'デプロイ中...' : 'Vercelにデプロイ'}
+                </span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -476,19 +478,19 @@ export default function Home() {
         </div>
       </div>
       
-      {/* 音声スイッチ（右上に固定） */}
-      <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg p-3 flex items-center gap-2 border-2 border-gray-200">
+      {/* 音声スイッチ（右上に固定、iPhone対応） */}
+      <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg p-2 sm:p-3 flex items-center gap-2 border-2 border-gray-200">
         <button
           onClick={() => setIsMuted(!isMuted)}
-          className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 ${
+          className={`px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium transition-colors flex items-center gap-1 sm:gap-2 ${
             isMuted
               ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
               : 'bg-blue-500 hover:bg-blue-600 text-white'
           }`}
           title={isMuted ? '音声をONにする' : '音声をOFFにする'}
         >
-          <span className="text-xl">{isMuted ? '🔇' : '🔊'}</span>
-          <span className="text-sm font-semibold">{isMuted ? '音声OFF' : '音声ON'}</span>
+          <span className="text-lg sm:text-xl">{isMuted ? '🔇' : '🔊'}</span>
+          <span className="text-xs sm:text-sm font-semibold hidden sm:inline">{isMuted ? '音声OFF' : '音声ON'}</span>
         </button>
       </div>
 
