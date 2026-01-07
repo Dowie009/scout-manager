@@ -119,57 +119,75 @@ export default function CandidateCard({ candidate, onJudge, onUpdateContactStatu
           #{globalNumber}
         </div>
         
-        {/* videoPathがURLの場合（Vercel環境で登録された場合）は動画再生を試行 */}
+        {/* videoPathがURLの場合（Vercel環境で登録された場合）は、既存の動画ファイルを探す */}
         {candidate.videoPath.startsWith('http') ? (
           <div className="w-full h-full relative">
-            {/* 動画を再生（CORS制限により失敗する可能性あり） */}
-            <video
-              ref={videoRef}
-              src={videoUrl || undefined}
-              muted={isMuted}
-              loop
-              className="w-full h-full object-cover"
-              playsInline
-              crossOrigin="anonymous"
-            />
-            {/* サムネイル画像（動画が再生できない場合のフォールバック） */}
-            {!isHovered && candidate.iconPath && candidate.iconPath !== '' && (
-              <img
-                src={candidate.iconPath}
-                alt={candidate.username}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none'
-                }}
-              />
-            )}
-            {/* プレースホルダー（サムネイルが取得できない場合） */}
-            {!isHovered && (!candidate.iconPath || candidate.iconPath === '') && (
-              <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
-                <div className="text-center text-white p-4">
-                  <div className="text-4xl mb-2">🎵</div>
-                  <div className="font-bold text-lg mb-1">TikTok動画</div>
-                  <div className="text-sm opacity-90">ホバーで再生</div>
-                </div>
-              </div>
-            )}
-            {/* 動画が再生できない場合のフォールバックリンク */}
-            {isHovered && (
-              <a
-                href={candidate.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center z-20 pointer-events-none"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  window.open(candidate.url, '_blank')
-                }}
-              >
-                <div className="bg-white rounded-lg px-6 py-3 text-gray-900 font-bold text-lg shadow-lg pointer-events-auto">
-                  TikTokで開く →
-                </div>
-              </a>
-            )}
+            {/* まず、既存の動画ファイルがあるか試す（Gitに含まれている場合） */}
+            {/* 動画IDからファイル名を推測して試行 */}
+            {(() => {
+              const videoIdMatch = candidate.videoPath.match(/\/video\/(\d+)/)
+              // 既存のファイル命名規則: video_timestamp.mp4
+              // 実際のファイル名は分からないので、データベースに保存されたパスを使用
+              // もしvideoPathがURLのままなら、動画ファイルはまだダウンロードされていない
+              
+              // サムネイル画像を表示
+              if (candidate.iconPath && candidate.iconPath !== '' && !candidate.iconPath.startsWith('http')) {
+                // アイコンパスがローカルファイルの場合
+                return (
+                  <>
+                    <img
+                      src={candidate.iconPath}
+                      alt={candidate.username}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none'
+                      }}
+                    />
+                    {/* ホバー時にTikTokのページへのリンクを表示 */}
+                    {isHovered && (
+                      <a
+                        href={candidate.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-20"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="bg-white rounded-lg px-6 py-3 text-gray-900 font-bold text-lg shadow-lg">
+                          TikTokで開く →
+                        </div>
+                      </a>
+                    )}
+                  </>
+                )
+              } else {
+                // アイコンパスが空またはURLの場合
+                return (
+                  <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                    <div className="text-center text-white p-4">
+                      <div className="text-4xl mb-2">🎵</div>
+                      <div className="font-bold text-lg mb-1">TikTok動画</div>
+                      <div className="text-sm opacity-90">
+                        {isHovered ? 'クリックしてTikTokで開く' : 'ホバーで開く'}
+                      </div>
+                    </div>
+                    {/* ホバー時にTikTokのページへのリンクを表示 */}
+                    {isHovered && (
+                      <a
+                        href={candidate.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center z-20"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="bg-white rounded-lg px-6 py-3 text-gray-900 font-bold text-lg shadow-lg">
+                          TikTokで開く →
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                )
+              }
+            })()}
           </div>
         ) : (
           <>

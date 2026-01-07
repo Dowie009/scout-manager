@@ -45,47 +45,40 @@ export async function downloadTikTokContent(url: string): Promise<{
   iconPath: string
   username: string
 }> {
-  // Vercel環境では動画ダウンロードをスキップ
+  // Vercel環境では動画ダウンロードをスキップ（動画ファイルは事前にローカルでダウンロードしてGitに含める）
   if (isVercelEnvironment()) {
     // URLからユーザー名を抽出
     const match = url.match(/@([^/?]+)/)
     const username = match ? match[1] : 'unknown'
     
-    // TikTokのoEmbed APIを使ってサムネイル画像を取得
-    let thumbnailUrl = ''
-    try {
-      // 動画IDを抽出
-      const videoIdMatch = url.match(/\/video\/(\d+)/)
-      if (videoIdMatch) {
-        const videoId = videoIdMatch[1]
-        // TikTokのサムネイルURLを構築（公式APIではないが、一般的なパターン）
-        thumbnailUrl = `https://p16-sign-va.tiktokcdn.com/obj/tos-maliva-p-0068/${videoId}?x-expires=...`
-        
-        // oEmbed APIを試す
-        try {
-          const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`
-          const response = await fetch(oembedUrl)
-          if (response.ok) {
-            const data = await response.json()
-            // oEmbedレスポンスからサムネイルURLを取得
-            if (data.thumbnail_url) {
-              thumbnailUrl = data.thumbnail_url
-            }
-          }
-        } catch (e) {
-          // oEmbed APIが失敗した場合は、デフォルトのサムネイルURLを使用
-          console.warn('oEmbed API failed, using fallback:', e)
-        }
-      }
-    } catch (error) {
-      console.warn('サムネイルURLの取得に失敗しました:', error)
-    }
+    // Vercel環境では、既にGitに含まれている動画ファイルを探す
+    // 動画ファイルは事前にローカル環境でダウンロードしてGitにコミットされている想定
+    // データベースに既に登録されている候補者の動画パスを使用するか、
+    // 新規登録の場合は、ローカル環境でダウンロードしてからGitにコミットする必要がある
     
-    // Vercel環境では、動画パスはURL、アイコンパスはサムネイルURL
-    return {
-      videoPath: url, // URLをそのまま保存（後で埋め込みプレーヤーで使用）
-      iconPath: thumbnailUrl || '', // サムネイル画像のURL
-      username,
+    // 注意: Vercel環境での新規登録時は、動画ファイルが存在しない可能性がある
+    // その場合は、後でローカル環境でダウンロードしてGitにコミットする必要がある
+    // ここでは、URLをそのまま保存し、フロントエンドで既存の動画ファイルを探す
+    
+    // 動画IDを抽出
+    const videoIdMatch = url.match(/\/video\/(\d+)/)
+    
+    if (videoIdMatch) {
+      // 動画IDがある場合、既存のファイル命名規則に基づいてパスを生成
+      // 実際のファイル名は timestamp ベースなので、完全一致は難しい
+      // フロントエンドで既存のファイルを探すか、データベースに保存されたパスを使用
+      return {
+        videoPath: url, // 一時的にURLを保存（後でローカル環境でダウンロードしてGitにコミット）
+        iconPath: '', // 一時的に空（後でローカル環境でダウンロードしてGitにコミット）
+        username,
+      }
+    } else {
+      // プロフィールページの場合は、ファイルが見つからない
+      return {
+        videoPath: url,
+        iconPath: '',
+        username,
+      }
     }
   }
 
