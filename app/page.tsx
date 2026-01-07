@@ -10,7 +10,7 @@ export default function Home() {
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [currentStatus, setCurrentStatus] = useState<'unreviewed' | 'contact' | 'stay' | 'pass'>('unreviewed')
   const [url, setUrl] = useState('')
-  const [gender, setGender] = useState<'male' | 'female' | 'other' | null>(null)
+  const [gender, setGender] = useState<'male' | 'female' | 'other' | null>('female') // デフォルトは女性
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -158,8 +158,8 @@ export default function Home() {
         return
       }
 
-      setUrl('')
-      setGender(null) // 性別選択をリセット
+            setUrl('')
+            setGender('female') // 性別選択をデフォルト（女性）にリセット
       await loadCandidates()
       await loadAllCandidates() // 新規登録後も全候補者リストを更新
       setAbortController(null)
