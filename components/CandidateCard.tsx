@@ -83,6 +83,30 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
     }
   }, [isHovered])
 
+  // 動画の再生開始を検知してサムネイルを消す
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handlePlaying = () => {
+      setIsPlaying(true)
+    }
+    const handlePause = () => {
+      // ホバー解除による停止と、タップによる停止を区別
+      if (!isHovered) {
+        setIsPlaying(false)
+      }
+    }
+
+    video.addEventListener('playing', handlePlaying)
+    video.addEventListener('pause', handlePause)
+
+    return () => {
+      video.removeEventListener('playing', handlePlaying)
+      video.removeEventListener('pause', handlePause)
+    }
+  }, [isHovered])
+
   // モバイル用：タップで再生/停止
   const handleVideoTap = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -91,14 +115,8 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
 
     if (videoRef.current) {
       if (videoRef.current.paused) {
-        // play()が成功してからisPlayingをtrueにする
-        videoRef.current.play()
-          .then(() => {
-            setIsPlaying(true)
-          })
-          .catch(() => {
-            // 再生失敗時は何もしない（サムネイルを維持）
-          })
+        // 再生開始（playingイベントでisPlayingがtrueになる）
+        videoRef.current.play().catch(() => {})
       } else {
         videoRef.current.pause()
         setIsPlaying(false)
@@ -316,10 +334,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             })()}
           </div>
         ) : (
-          <div
-            onClick={handleVideoTap}
-            className="w-full h-full cursor-pointer relative"
-          >
+          <div className="w-full h-full relative">
             {/* 動画 - 常に表示、ホバー/タップで再生 */}
             <video
               ref={videoRef}
@@ -328,19 +343,24 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
               loop
               playsInline
               preload="auto"
-              webkit-playsinline="true"
-              className="w-full h-full object-cover"
+              onClick={handleVideoTap}
+              className="w-full h-full object-cover cursor-pointer"
             />
-            {/* サムネイル - ホバーでも再生中でもない時のみ表示（動画の上に被せる） */}
+            {/* サムネイル - 動画の上に被せる、タップで非表示 */}
             {!isHovered && !isPlaying && candidate.iconPath && (
-              <img
-                src={candidate.iconPath}
-                alt={candidate.username}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none'
-                }}
-              />
+              <div
+                onClick={handleVideoTap}
+                className="absolute inset-0 w-full h-full cursor-pointer"
+              >
+                <img
+                  src={candidate.iconPath}
+                  alt={candidate.username}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+              </div>
             )}
           </div>
         )}
