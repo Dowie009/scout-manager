@@ -31,6 +31,7 @@ export default function Home() {
   const [deployMessage, setDeployMessage] = useState('') // デプロイメッセージ
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid') // 表示モード（グリッド or リスト）
   const [isInitialLoading, setIsInitialLoading] = useState(true) // 初期ロード中かどうか
+  const [audioEnabled, setAudioEnabled] = useState(false) // 音声許可済みかどうか（iOS対策）
 
   // 環境判定（ローカル環境かどうか）
   useEffect(() => {
@@ -396,10 +397,27 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* 音声許可ボタン（iOS対策：ローディング後に表示） */}
+      {!isInitialLoading && !audioEnabled && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
+          <button
+            onClick={() => {
+              setAudioEnabled(true)
+              setIsMuted(false)
+            }}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-12 py-8 rounded-2xl font-bold text-2xl shadow-2xl hover:scale-105 transition-transform flex flex-col items-center gap-4"
+          >
+            <span className="text-6xl">🔊</span>
+            <span>タップして開始</span>
+            <span className="text-base font-normal opacity-80">動画の再生を有効にします</span>
+          </button>
+        </div>
+      )}
       {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.22</span></h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.23</span></h1>
           <div className="flex flex-wrap items-center gap-2">
             <a
               href="/stats"
