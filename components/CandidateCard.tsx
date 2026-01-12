@@ -84,9 +84,21 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
   }, [isHovered, isPlaying])
 
   // 動画エリアをタップした時の処理（モバイル対応）
-  const handleVideoTap = () => {
+  const handleVideoTap = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     if (deleteMode) return
-    setIsPlaying(prev => !prev)
+
+    // 直接動画を制御する（状態に頼らない）
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play().catch(() => {})
+        setIsPlaying(true)
+      } else {
+        videoRef.current.pause()
+        setIsPlaying(false)
+      }
+    }
   }
 
   const handleJudge = async (status: 'contact' | 'stay' | 'pass') => {
