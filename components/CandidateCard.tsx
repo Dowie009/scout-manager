@@ -17,6 +17,7 @@ interface CandidateCardProps {
 
 function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, globalNumber, genderNumber, deleteMode, isSelected, onToggleSelect }: CandidateCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false) // タップで再生/停止用（モバイル対応）
   const [memo, setMemo] = useState('')
   const [isJudging, setIsJudging] = useState(false)
   const [isUpdatingContactStatus, setIsUpdatingContactStatus] = useState(false)
@@ -69,16 +70,24 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
     }
   }, [candidate.videoPath, isHovered, videoUrl])
 
+  // PC（ホバー）とモバイル（タップ）両方に対応した再生制御
   useEffect(() => {
     if (videoRef.current) {
-      if (isHovered) {
+      // ホバー中または再生中なら再生
+      if (isHovered || isPlaying) {
         videoRef.current.play().catch(() => {})
       } else {
         videoRef.current.pause()
         videoRef.current.currentTime = 0
       }
     }
-  }, [isHovered])
+  }, [isHovered, isPlaying])
+
+  // 動画エリアをタップした時の処理（モバイル対応）
+  const handleVideoTap = () => {
+    if (deleteMode) return
+    setIsPlaying(prev => !prev)
+  }
 
   const handleJudge = async (status: 'contact' | 'stay' | 'pass') => {
     if (deleteMode) return // 削除モード中はジャッジできない
@@ -289,7 +298,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             })()}
           </div>
         ) : (
-          <>
+          <div onClick={handleVideoTap} className="w-full h-full cursor-pointer">
             <video
               ref={videoRef}
               src={candidate.videoPath}
@@ -299,7 +308,8 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
               preload="metadata"
               className="w-full h-full object-cover"
             />
-            {!isHovered && (
+            {/* ホバーでも再生中でもない時のみサムネイルを表示 */}
+            {!isHovered && !isPlaying && (
               <img
                 src={candidate.iconPath}
                 alt={candidate.username}
@@ -309,7 +319,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
                 }}
               />
             )}
-          </>
+          </div>
         )}
       </div>
       

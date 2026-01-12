@@ -61,10 +61,9 @@ export default function Home() {
   // 全候補者を読み込んで、全体での登録順を計算
   const loadAllCandidates = async () => {
     try {
-      // キャッシュを活用
+      // キャッシュを無効化して常に最新データを取得
       const response = await fetch('/api/candidates', {
-        cache: 'force-cache',
-        next: { revalidate: 60 },
+        cache: 'no-store',
       })
       const data = await response.json()
       // 登録順（古い順）でソート
@@ -407,7 +406,7 @@ export default function Home() {
       {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.5</span></h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.6</span></h1>
           <div className="flex flex-wrap items-center gap-2">
             <a
               href="/stats"
