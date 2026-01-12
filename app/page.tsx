@@ -18,7 +18,7 @@ export default function Home() {
   const [error, setError] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [processedCounts, setProcessedCounts] = useState({ contact: 0, stay: 0, pass: 0 })
-  const [isMuted, setIsMuted] = useState(true) // デフォルトはミュート（iOS自動再生に必要）
+  const [isMuted, setIsMuted] = useState(false) // デフォルトは音声ON
   const [loadingDots, setLoadingDots] = useState('')
   const [deleteMode, setDeleteMode] = useState(false) // 削除モード
   const [selectedIds, setSelectedIds] = useState<string[]>([]) // 選択されたID
@@ -31,7 +31,7 @@ export default function Home() {
   const [deployMessage, setDeployMessage] = useState('') // デプロイメッセージ
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid') // 表示モード（グリッド or リスト）
   const [isInitialLoading, setIsInitialLoading] = useState(true) // 初期ロード中かどうか
-  const [audioEnabled, setAudioEnabled] = useState(false) // 音声許可済みかどうか（iOS対策）
+  const [showMuteHint, setShowMuteHint] = useState(true) // ミュート解除のヒント表示
 
   // 環境判定（ローカル環境かどうか）
   useEffect(() => {
@@ -398,26 +398,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* 音声許可ボタン（iOS対策：ローディング後に表示） */}
-      {!isInitialLoading && !audioEnabled && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
-          <button
-            onClick={() => {
-              setAudioEnabled(true)
-              setIsMuted(false)
-            }}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-12 py-8 rounded-2xl font-bold text-2xl shadow-2xl hover:scale-105 transition-transform flex flex-col items-center gap-4"
-          >
-            <span className="text-6xl">🔊</span>
-            <span>タップして開始</span>
-            <span className="text-base font-normal opacity-80">動画の再生を有効にします</span>
-          </button>
-        </div>
-      )}
-      {/* ナビゲーションバー */}
+            {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.23</span></h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.28</span></h1>
           <div className="flex flex-wrap items-center gap-2">
             <a
               href="/stats"
@@ -543,6 +527,13 @@ export default function Home() {
           <span className="text-xs sm:text-sm font-semibold hidden sm:inline">{isMuted ? '音声OFF' : '音声ON'}</span>
         </button>
       </div>
+
+      {/* iOS用：最初だけ2回タップが必要なことを伝えるヒント */}
+      {showMuteHint && !isInitialLoading && (
+        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-base animate-bounce">
+          👆 最初だけ2回タップで再生開始
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* URL入力フォーム（ローカル環境のみ表示） */}
@@ -823,6 +814,7 @@ export default function Home() {
                   deleteMode={deleteMode}
                   isSelected={selectedIds.includes(candidate.id)}
                   onToggleSelect={() => handleToggleSelect(candidate.id)}
+                  onFirstTap={() => setShowMuteHint(false)}
                 />
               </div>
             ))}

@@ -13,45 +13,47 @@ interface CandidateCardProps {
   deleteMode: boolean // 削除モードかどうか
   isSelected: boolean // 選択されているかどうか
   onToggleSelect: () => void // 選択の切り替え
+  onFirstTap?: () => void // 最初のタップ時のコールバック（iOS用ヒント非表示）
 }
 
-function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, globalNumber, genderNumber, deleteMode, isSelected, onToggleSelect }: CandidateCardProps) {
+function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, globalNumber, genderNumber, deleteMode, isSelected, onToggleSelect, onFirstTap }: CandidateCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false) // タップで再生/停止用（モバイル対応）
   const [memo, setMemo] = useState('')
   const [isJudging, setIsJudging] = useState(false)
   const [isUpdatingContactStatus, setIsUpdatingContactStatus] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoUrl, setVideoUrl] = useState<string | null>(null) // Vercel環境用の動画URL
-
+  
   // YouTube URLかどうかを判定（videoPathまたはurlをチェック）
   const isYouTubeUrl = (): boolean => {
     // videoPathとurlの両方をチェック
     const videoPath = candidate.videoPath || ''
     const url = candidate.url || ''
-    return videoPath.includes('youtube.com') || videoPath.includes('youtu.be') ||
+    return videoPath.includes('youtube.com') || videoPath.includes('youtu.be') || 
            url.includes('youtube.com') || url.includes('youtu.be')
   }
-
+  
   // YouTube URLから動画IDを抽出
   const getYouTubeVideoId = (): string | null => {
     // videoPathとurlの両方をチェック（urlを優先）
     const urlToCheck = candidate.url || candidate.videoPath || ''
-
+    
     // YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
     const shortsMatch = urlToCheck.match(/youtube\.com\/shorts\/([^/?]+)/)
     if (shortsMatch) return shortsMatch[1]
-
+    
     // 通常のYouTube: https://www.youtube.com/watch?v=VIDEO_ID
     const watchMatch = urlToCheck.match(/youtube\.com\/watch\?v=([^&]+)/)
     if (watchMatch) return watchMatch[1]
-
+    
     // 短縮URL: https://youtu.be/VIDEO_ID
     const shortMatch = urlToCheck.match(/youtu\.be\/([^/?]+)/)
     if (shortMatch) return shortMatch[1]
-
+    
     return null
   }
-
+  
   // YouTube埋め込みURLを生成
   const getYouTubeEmbedUrl = (): string | null => {
     const videoId = getYouTubeVideoId()
@@ -69,44 +71,73 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
     }
   }, [candidate.videoPath, isHovered, videoUrl])
 
-  // PC用：ホバーで再生制御（モバイルはhandleVideoTapで直接制御）
+  // PC用：ホバーで再生制御
   useEffect(() => {
     if (videoRef.current) {
-      // isHovered=falseの場合のみ停止処理（モバイルタップ停止時も含む）
-      if (!isHovered) {
+      if (isHovered) {
+        videoRef.current.play().catch(() => {})
+      } else if (!isPlaying) {
+        // ホバー解除時、タップ再生中でなければ停止
         videoRef.current.pause()
         videoRef.current.currentTime = 0
       }
-      // isHovered=trueの場合、PCホバー時のみ再生
-      // モバイルの場合はhandleVideoTapで既にplay()済みなので、ここでは何もしない
-      // PCホバーの場合のみ再生を試みる（既に再生中なら何もしない）
-      else if (videoRef.current.paused) {
-        if (candidate.videoPath.startsWith('http') && videoUrl) {
-          videoRef.current.src = videoUrl
-          videoRef.current.play().catch((err) => {
-            console.warn('動画の再生に失敗しました（CORS制限の可能性）:', err)
-          })
-        } else if (!candidate.videoPath.startsWith('http')) {
-          videoRef.current.play().catch(() => {})
-        }
-      }
     }
-  }, [isHovered, candidate.videoPath, videoUrl])
+  }, [isHovered])
 
-  // モバイル用：タップで再生/停止（iOS対策：タップ内で直接play()を呼ぶ）
-  const handleVideoTap = () => {
-    if (deleteMode) return
+  // 動画の再生開始を検知してサムネイルを消す
+  useEffect(() => {
     const video = videoRef.current
     if (!video) return
 
-    if (video.paused) {
-      // タップ内で直接play()を呼ぶ（iOSはユーザーアクション内でのplay()のみ許可）
-      video.play().catch(() => {})
-      setIsHovered(true)
-    } else {
-      video.pause()
-      video.currentTime = 0
-      setIsHovered(false)
+    const handlePlaying = () => {
+      setIsPlaying(true)
+    }
+    const handlePause = () => {
+      // ホバー解除による停止と、タップによる停止を区別
+      if (!isHovered) {
+        setIsPlaying(false)
+      }
+    }
+
+    video.addEventListener('playing', handlePlaying)
+    video.addEventListener('pause', handlePause)
+
+    return () => {
+      video.removeEventListener('playing', handlePlaying)
+      video.removeEventListener('pause', handlePause)
+    }
+  }, [isHovered])
+
+  // モバイル用：タップで再生/停止
+  const handleVideoTap = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (deleteMode) return
+
+    // 最初のタップ時にヒントを非表示にするコールバック
+    if (onFirstTap) {
+      onFirstTap()
+    }
+
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        // iOS対策：最初は必ずmutedで再生開始
+        const video = videoRef.current
+        const wasMuted = video.muted
+        video.muted = true  // 一時的にミュート
+        video.play()
+          .then(() => {
+            // 再生成功後、元のミュート状態に戻す
+            video.muted = wasMuted
+            setIsPlaying(true)
+          })
+          .catch(() => {
+            video.muted = wasMuted
+          })
+      } else {
+        videoRef.current.pause()
+        setIsPlaying(false)
+      }
     }
   }
 
@@ -155,7 +186,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
       )}
       {/* 削除モード時のチェックボックス - 大きく目立つように */}
       {deleteMode && (
-        <div
+        <div 
           className="absolute top-4 left-4 z-50 bg-white rounded-lg p-2 shadow-2xl border-2 border-red-500"
           onClick={(e) => e.stopPropagation()}
         >
@@ -164,7 +195,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             checked={isSelected}
             onChange={onToggleSelect}
             className="w-8 h-8 cursor-pointer accent-red-600 border-2 border-gray-300 rounded"
-            style={{
+            style={{ 
               minWidth: '32px',
               minHeight: '32px',
               cursor: 'pointer'
@@ -172,9 +203,10 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
           />
         </div>
       )}
-
+      
       <div className="relative aspect-[9/16] bg-gray-100">
         {/* シャープナンバー（動画の左上に大きく表示、性別に応じて色を変更） */}
+        {/* 性別ごとの番号を表示（女性#1, #2...、男性#1, #2...） */}
         {/* 削除モード時は右側に表示してチェックボックスと重ならないように */}
         <div
           className={`absolute ${deleteMode ? 'top-3 right-3' : 'top-3 left-3'} z-10 ${
@@ -187,24 +219,24 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
         >
           #{genderNumber}
         </div>
-
+        
         {/* 紹介者バッジ（シャープナンバーの下に配置） */}
         {candidate.hasReferrer && !deleteMode && (
-          <div
+          <div 
             className={`absolute ${deleteMode ? 'top-16 right-3' : 'top-16 left-3'} z-10`}
           >
             <span className="text-xs font-bold bg-yellow-400 text-yellow-900 px-2 py-1 rounded shadow-md">直接紹介</span>
           </div>
         )}
-
-
+        
+        
         {/* YouTube URLの場合は埋め込みプレーヤーを使用 */}
         {isYouTubeUrl() ? (
           <div className="w-full h-full relative">
             {(() => {
               const embedUrl = getYouTubeEmbedUrl()
               const videoId = getYouTubeVideoId()
-
+              
               if (!embedUrl || !videoId) {
                 return (
                   <div className="w-full h-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
@@ -216,7 +248,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
                   </div>
                 )
               }
-
+              
               // サムネイル画像（ホバーしていない時）
               if (!isHovered) {
                 return (
@@ -231,7 +263,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
                   />
                 )
               }
-
+              
               // ホバー時はYouTube埋め込みプレーヤーを表示
               return (
                 <iframe
@@ -255,7 +287,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
               // 既存のファイル命名規則: video_timestamp.mp4
               // 実際のファイル名は分からないので、データベースに保存されたパスを使用
               // もしvideoPathがURLのままなら、動画ファイルはまだダウンロードされていない
-
+              
               // サムネイル画像を表示
               if (candidate.iconPath && candidate.iconPath !== '' && !candidate.iconPath.startsWith('http')) {
                 // アイコンパスがローカルファイルの場合
@@ -319,29 +351,38 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             })()}
           </div>
         ) : (
-          <div className="w-full h-full relative" onClick={handleVideoTap}>
+          <div className="w-full h-full relative">
+            {/* 動画 - 常に表示、ホバー/タップで再生 */}
             <video
               ref={videoRef}
               src={candidate.videoPath}
               muted={isMuted}
               loop
               playsInline
-              className="w-full h-full object-cover"
+              preload="auto"
+              onClick={handleVideoTap}
+              className="w-full h-full object-cover cursor-pointer"
             />
-            {!isHovered && (
-              <img
-                src={candidate.iconPath}
-                alt={candidate.username}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none'
-                }}
-              />
+            {/* サムネイル - 動画の上に被せる、タップで非表示 */}
+            {!isHovered && !isPlaying && candidate.iconPath && (
+              <div
+                onClick={handleVideoTap}
+                className="absolute inset-0 w-full h-full cursor-pointer"
+              >
+                <img
+                  src={candidate.iconPath}
+                  alt={candidate.username}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+              </div>
             )}
           </div>
         )}
       </div>
-
+      
       <div className="p-4">
         <div className="flex items-center justify-between mb-2 gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -359,7 +400,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             <span>プロフィール</span>
           </a>
         </div>
-
+        
         {/* 登録日時（小さく表示） */}
         <div className="text-xs text-gray-500 mb-2">
           {new Date(candidate.createdAt).toLocaleString('ja-JP', {
@@ -370,7 +411,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             minute: '2-digit'
           })} 登録
         </div>
-
+        
         {/* 紹介者情報（紹介者がいる場合） */}
         {candidate.hasReferrer && (
           <div className="mb-3 p-3 bg-yellow-100 border-l-4 border-yellow-500 rounded-r">
@@ -386,7 +427,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             )}
           </div>
         )}
-
+        
         {!deleteMode && (
           <div className="space-y-3">
             {/* 連絡するフォルダの場合、詳細ステータスボタンを表示 */}
@@ -463,7 +504,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
                     🚫 NG
                   </button>
                 </div>
-
+                
                 <textarea
                   value={memo}
                   onChange={(e) => setMemo(e.target.value)}
@@ -475,7 +516,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             )}
           </div>
         )}
-
+        
         {deleteMode && (
           <div className="text-center py-4 text-gray-500">
             削除する場合はチェックを入れてください
