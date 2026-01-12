@@ -91,8 +91,14 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
 
     if (videoRef.current) {
       if (videoRef.current.paused) {
-        videoRef.current.play().catch(() => {})
-        setIsPlaying(true)
+        // play()が成功してからisPlayingをtrueにする
+        videoRef.current.play()
+          .then(() => {
+            setIsPlaying(true)
+          })
+          .catch(() => {
+            // 再生失敗時は何もしない（サムネイルを維持）
+          })
       } else {
         videoRef.current.pause()
         setIsPlaying(false)
