@@ -107,31 +107,22 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
     }
   }, [isHovered])
 
-  // モバイル用：タップで再生/停止
+  // モバイル用：タップで再生/停止（iOS対策：同期的にplay()を呼ぶ）
   const handleVideoTap = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (deleteMode) return
 
-    if (videoRef.current) {
-      if (videoRef.current.paused) {
-        // iOS対策：最初は必ずmutedで再生開始
-        const video = videoRef.current
-        const wasMuted = video.muted
-        video.muted = true  // 一時的にミュート
-        video.play()
-          .then(() => {
-            // 再生成功後、元のミュート状態に戻す
-            video.muted = wasMuted
-            setIsPlaying(true)
-          })
-          .catch(() => {
-            video.muted = wasMuted
-          })
-      } else {
-        videoRef.current.pause()
-        setIsPlaying(false)
-      }
+    const video = videoRef.current
+    if (!video) return
+
+    if (video.paused) {
+      // 同期的にplay()を呼ぶ（これが重要）
+      video.play()
+      setIsPlaying(true)
+    } else {
+      video.pause()
+      setIsPlaying(false)
     }
   }
 
@@ -346,7 +337,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
           </div>
         ) : (
           <div className="w-full h-full relative">
-            {/* 動画 - 常に表示、ホバー/タップで再生 */}
+            {/* 動画 - 常に表示 */}
             <video
               ref={videoRef}
               src={candidate.videoPath}
@@ -354,15 +345,15 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
               loop
               playsInline
               preload="auto"
-              onClick={handleVideoTap}
-              className="w-full h-full object-cover cursor-pointer"
+              className="w-full h-full object-cover"
             />
-            {/* サムネイル - 動画の上に被せる、タップで非表示 */}
-            {!isHovered && !isPlaying && candidate.iconPath && (
-              <div
-                onClick={handleVideoTap}
-                className="absolute inset-0 w-full h-full cursor-pointer"
-              >
+            {/* タップ領域 - 常に最前面に配置 */}
+            <div
+              onClick={handleVideoTap}
+              className="absolute inset-0 w-full h-full cursor-pointer z-20"
+            >
+              {/* サムネイル - 再生中でなければ表示 */}
+              {!isHovered && !isPlaying && candidate.iconPath && (
                 <img
                   src={candidate.iconPath}
                   alt={candidate.username}
@@ -371,8 +362,8 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
                     (e.target as HTMLImageElement).style.display = 'none'
                   }}
                 />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
       </div>
