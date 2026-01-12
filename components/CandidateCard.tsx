@@ -22,6 +22,16 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
   const [isUpdatingContactStatus, setIsUpdatingContactStatus] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoUrl, setVideoUrl] = useState<string | null>(null) // Vercel環境用の動画URL
+  const [videoError, setVideoError] = useState(false) // 動画読み込みエラー
+  const [isLocalEnvironment, setIsLocalEnvironment] = useState(false) // ローカル環境判定
+
+  // 環境判定
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname
+      setIsLocalEnvironment(hostname === 'localhost' || hostname === '127.0.0.1')
+    }
+  }, [])
   
   // YouTube URLかどうかを判定（videoPathまたはurlをチェック）
   const isYouTubeUrl = (): boolean => {
@@ -313,27 +323,66 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             })()}
           </div>
         ) : (
-          <>
-            <video
-              ref={videoRef}
-              src={candidate.videoPath}
-              muted={isMuted}
-              loop
-              playsInline
-              preload="metadata"
-              className="w-full h-full object-cover"
-            />
-            {!isHovered && (
-              <img
-                src={candidate.iconPath}
-                alt={candidate.username}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none'
-                }}
+          // ローカル環境では動画再生、Vercel環境ではサムネイル+TikTokリンク
+          isLocalEnvironment && !videoError ? (
+            <>
+              <video
+                ref={videoRef}
+                src={candidate.videoPath}
+                muted={isMuted}
+                loop
+                playsInline
+                preload="metadata"
+                className="w-full h-full object-cover"
+                onError={() => setVideoError(true)}
               />
-            )}
-          </>
+              {!isHovered && (
+                <img
+                  src={candidate.iconPath}
+                  alt={candidate.username}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+              )}
+            </>
+          ) : (
+            // Vercel環境または動画エラー時: サムネイル + TikTokリンク
+            <div className="w-full h-full relative">
+              {candidate.iconPath && candidate.iconPath !== '' ? (
+                <img
+                  src={candidate.iconPath}
+                  alt={candidate.username}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                  <div className="text-center text-white p-4">
+                    <div className="text-4xl mb-2">🎵</div>
+                    <div className="font-bold text-lg">TikTok</div>
+                  </div>
+                </div>
+              )}
+              {/* ホバー時にTikTokリンクを表示 */}
+              {isHovered && (
+                <a
+                  href={candidate.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center z-20"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="bg-white rounded-lg px-6 py-3 text-gray-900 font-bold text-lg shadow-lg">
+                    TikTokで開く →
+                  </div>
+                </a>
+              )}
+            </div>
+          )
         )}
       </div>
       
