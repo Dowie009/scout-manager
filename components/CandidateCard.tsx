@@ -321,7 +321,8 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
               muted={isMuted}
               loop
               playsInline
-              preload="metadata"
+              preload="auto"
+              webkit-playsinline="true"
               className="w-full h-full object-cover"
             />
             {/* サムネイル - ホバーでも再生中でもない時のみ表示（動画の上に被せる） */}
