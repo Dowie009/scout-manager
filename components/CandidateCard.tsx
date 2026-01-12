@@ -299,7 +299,10 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             })()}
           </div>
         ) : (
-          <div onClick={handleVideoTap} className="w-full h-full cursor-pointer relative">
+          <div
+            onClick={handleVideoTap}
+            className="w-full h-full cursor-pointer relative"
+          >
             {/* 動画 - 常に表示、ホバー/タップで再生 */}
             <video
               ref={videoRef}
@@ -307,7 +310,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
               muted={isMuted}
               loop
               playsInline
-              preload="auto"
+              preload="metadata"
               className="w-full h-full object-cover"
             />
             {/* サムネイル - ホバーでも再生中でもない時のみ表示（動画の上に被せる） */}
@@ -315,7 +318,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
               <img
                 src={candidate.iconPath}
                 alt={candidate.username}
-                className="absolute inset-0 w-full h-full object-cover z-10"
+                className="absolute inset-0 w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none'
                 }}
