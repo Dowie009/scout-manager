@@ -409,7 +409,22 @@ export default function Home() {
       {(isInitialLoading || !userInteracted) && (
         <div
           className="fixed inset-0 bg-white z-50 flex items-center justify-center cursor-pointer"
-          onClick={() => setUserInteracted(true)}
+          onClick={() => {
+            // iOS対策：ダミー動画を再生してビデオ再生許可を取得
+            const dummyVideo = document.getElementById('dummy-video') as HTMLVideoElement
+            if (dummyVideo) {
+              dummyVideo.play().catch(() => {})
+            }
+            // AudioContextも初期化
+            try {
+              const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+              if (AudioContext) {
+                const audioCtx = new AudioContext()
+                audioCtx.resume()
+              }
+            } catch (e) {}
+            setUserInteracted(true)
+          }}
         >
           <div className="text-center">
             {isInitialLoading ? (
@@ -423,6 +438,14 @@ export default function Home() {
                 <div className="text-6xl mb-4">🎬</div>
                 <p className="text-gray-800 text-xl font-bold mb-2">タップして開始</p>
                 <p className="text-gray-500 text-sm">動画を再生するにはタップしてください</p>
+                {/* iOS用：透明なダミー動画を配置してタップ時に再生許可を取得 */}
+                <video
+                  id="dummy-video"
+                  muted
+                  playsInline
+                  style={{ width: 1, height: 1, opacity: 0, position: 'absolute' }}
+                  src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAAhtZGF0AAAAMm1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2ZjU4Ljc2LjEwMA=="
+                />
               </>
             )}
           </div>
@@ -431,7 +454,7 @@ export default function Home() {
       {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.17</span></h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.18</span></h1>
           <div className="flex flex-wrap items-center gap-2">
             <a
               href="/stats"
