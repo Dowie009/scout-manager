@@ -31,12 +31,31 @@ export default function Home() {
   const [deployMessage, setDeployMessage] = useState('') // デプロイメッセージ
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid') // 表示モード（グリッド or リスト）
   const [isInitialLoading, setIsInitialLoading] = useState(true) // 初期ロード中かどうか
+  const [userInteracted, setUserInteracted] = useState(false) // ユーザーが操作したかどうか（iOS対策）
 
   // 環境判定（ローカル環境かどうか）
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hostname = window.location.hostname
       setIsLocalEnvironment(hostname === 'localhost' || hostname === '127.0.0.1')
+    }
+  }, [])
+
+  // iOS対策：最初のタップを検知してユーザーインタラクション状態を設定
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      setUserInteracted(true)
+      // 一度検知したらリスナーを削除
+      document.removeEventListener('touchstart', handleFirstInteraction)
+      document.removeEventListener('click', handleFirstInteraction)
+    }
+
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true })
+    document.addEventListener('click', handleFirstInteraction, { once: true })
+
+    return () => {
+      document.removeEventListener('touchstart', handleFirstInteraction)
+      document.removeEventListener('click', handleFirstInteraction)
     }
   }, [])
 
@@ -386,20 +405,33 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 初回ローディング表示 */}
-      {isInitialLoading && (
-        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+      {/* 初回ローディング表示 または iOS用の開始画面 */}
+      {(isInitialLoading || !userInteracted) && (
+        <div
+          className="fixed inset-0 bg-white z-50 flex items-center justify-center cursor-pointer"
+          onClick={() => setUserInteracted(true)}
+        >
           <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 text-lg">読み込み中...</p>
-            <p className="text-gray-400 text-sm mt-2">初回アクセス時は数秒かかることがあります</p>
+            {isInitialLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600 text-lg">読み込み中...</p>
+                <p className="text-gray-400 text-sm mt-2">初回アクセス時は数秒かかることがあります</p>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl mb-4">🎬</div>
+                <p className="text-gray-800 text-xl font-bold mb-2">タップして開始</p>
+                <p className="text-gray-500 text-sm">動画を再生するにはタップしてください</p>
+              </>
+            )}
           </div>
         </div>
       )}
       {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.16</span></h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.17</span></h1>
           <div className="flex flex-wrap items-center gap-2">
             <a
               href="/stats"
