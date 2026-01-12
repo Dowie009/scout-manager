@@ -384,17 +384,6 @@ export default function Home() {
 
   const filteredCandidates = candidates.filter(c => c.status === currentStatus)
 
-  // ローディング状態を管理
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
-
-  useEffect(() => {
-    // 初回読み込み完了後、ローディング状態を解除
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false)
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [])
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 初回ローディング表示 */}
@@ -410,7 +399,7 @@ export default function Home() {
       {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.8</span></h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.9</span></h1>
           <div className="flex flex-wrap items-center gap-2">
             <a
               href="/stats"
