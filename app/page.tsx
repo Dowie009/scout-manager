@@ -30,6 +30,7 @@ export default function Home() {
   const [isDeploying, setIsDeploying] = useState(false) // デプロイ中かどうか
   const [deployMessage, setDeployMessage] = useState('') // デプロイメッセージ
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid') // 表示モード（グリッド or リスト）
+  const [isInitialLoading, setIsInitialLoading] = useState(true) // 初期ロード中かどうか
 
   // 環境判定（ローカル環境かどうか）
   useEffect(() => {
@@ -144,6 +145,7 @@ export default function Home() {
 
   const loadCandidates = async () => {
     try {
+      setIsInitialLoading(true) // ローディング開始
       // キャッシュを活用（ブラウザのキャッシュを使用）
       const response = await fetch(`/api/candidates?status=${currentStatus}`, {
         cache: 'force-cache', // キャッシュを優先
@@ -159,6 +161,8 @@ export default function Home() {
       setCandidates(sortedData)
     } catch (err) {
       console.error('候補者の読み込みに失敗しました:', err)
+    } finally {
+      setIsInitialLoading(false) // ローディング終了
     }
   }
 
@@ -406,7 +410,7 @@ export default function Home() {
       {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.7</span></h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.8</span></h1>
           <div className="flex flex-wrap items-center gap-2">
             <a
               href="/stats"
@@ -684,8 +688,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* 候補者表示 */}
-        {viewMode === 'list' ? (
+        {/* 候補者表示（ローディング完了後のみ表示） */}
+        {!isInitialLoading && viewMode === 'list' ? (
           // リスト表示（全ホルダー対応）
           <div className="space-y-3">
             {filteredCandidates.map((candidate) => (
@@ -797,13 +801,13 @@ export default function Home() {
               </div>
             ))}
           </div>
-        ) : (
+        ) : !isInitialLoading ? (
           // グリッド表示（通常）
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredCandidates.map((candidate) => (
               <div key={candidate.id}>
-                <CandidateCard 
-                  candidate={candidate} 
+                <CandidateCard
+                  candidate={candidate}
                   onJudge={handleJudge}
                   onUpdateContactStatus={candidate.status === 'contact' ? handleUpdateContactStatus : undefined}
                   isMuted={isMuted}
@@ -816,9 +820,31 @@ export default function Home() {
               </div>
             ))}
           </div>
+        ) : null}
+
+        {/* ローディング中の表示 */}
+        {isInitialLoading && (
+          <div className="text-center py-16">
+            <div className="inline-flex flex-col items-center gap-4">
+              {/* スピナーアニメーション */}
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-gray-200 border-b-pink-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}></div>
+                </div>
+              </div>
+              <div className="text-gray-600 text-lg font-medium">
+                データを読み込んでいます...
+              </div>
+              <div className="text-gray-400 text-sm">
+                しばらくお待ちください
+              </div>
+            </div>
+          </div>
         )}
 
-        {filteredCandidates.length === 0 && (
+        {/* データがない場合の表示（ローディング完了後） */}
+        {!isInitialLoading && filteredCandidates.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             候補者がありません
           </div>
