@@ -38,32 +38,59 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    
-    // 重複チェック
-    const existing = await getCandidateByUrl(url)
-    if (existing) {
-      // ステータス名を日本語にマッピング
-      const statusMap: Record<string, string> = {
-        'unreviewed': '📁 未チェック',
-        'contact': '📁 連絡する',
-        'stay': '📁 保留',
-        'pass': '📁 NG'
-      }
-      
-      const statusLabel = statusMap[existing.status] || existing.status
-      
+
+    // URLから先にユーザー名を抽出
+    const usernameMatch = url.match(/@([^/?]+)/)
+    const extractedUsername = usernameMatch ? usernameMatch[1] : null
+
+    // ステータス名を日本語にマッピング
+    const statusMap: Record<string, string> = {
+      'unreviewed': '📁 未チェック',
+      'contact': '📁 連絡する',
+      'stay': '📁 保留',
+      'pass': '📁 NG'
+    }
+
+    // URL重複チェック
+    const existingByUrl = await getCandidateByUrl(url)
+    if (existingByUrl) {
+      const statusLabel = statusMap[existingByUrl.status] || existingByUrl.status
+
       return NextResponse.json(
-        { 
+        {
           error: `⚠️ このURLは既に登録済みです`,
           duplicateInfo: {
-            status: existing.status,
+            status: existingByUrl.status,
             statusLabel: statusLabel,
-            username: existing.username,
-            memo: existing.memo
+            username: existingByUrl.username,
+            memo: existingByUrl.memo
           }
         },
         { status: 400 }
       )
+    }
+
+    // 同じアカウント（ユーザー名）の重複チェック
+    if (extractedUsername) {
+      const allCandidates = await getCandidates()
+      const existingByUsername = allCandidates.find(c => c.username === extractedUsername)
+
+      if (existingByUsername) {
+        const statusLabel = statusMap[existingByUsername.status] || existingByUsername.status
+
+        return NextResponse.json(
+          {
+            error: `⚠️ このアカウント（@${extractedUsername}）は既に登録済みです`,
+            duplicateInfo: {
+              status: existingByUsername.status,
+              statusLabel: statusLabel,
+              username: existingByUsername.username,
+              memo: existingByUsername.memo
+            }
+          },
+          { status: 400 }
+        )
+      }
     }
 
     // ダウンロード処理
