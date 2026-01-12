@@ -154,17 +154,18 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
       
       <div className="relative aspect-[9/16] bg-gray-100">
         {/* シャープナンバー（動画の左上に大きく表示、性別に応じて色を変更） */}
+        {/* 性別ごとの番号を表示（女性#1, #2...、男性#1, #2...） */}
         {/* 削除モード時は右側に表示してチェックボックスと重ならないように */}
-        <div 
+        <div
           className={`absolute ${deleteMode ? 'top-3 right-3' : 'top-3 left-3'} z-10 ${
-            candidate.gender === 'female' 
-              ? 'bg-pink-500 bg-opacity-90' 
+            candidate.gender === 'female'
+              ? 'bg-pink-500 bg-opacity-90'
               : candidate.gender === 'male'
               ? 'bg-blue-500 bg-opacity-90'
               : 'bg-gray-500 bg-opacity-90'
           } text-white px-3 py-1 rounded-md font-bold text-2xl shadow-lg`}
         >
-          #{globalNumber}
+          #{genderNumber}
         </div>
         
         {/* 紹介者バッジ（シャープナンバーの下に配置） */}
