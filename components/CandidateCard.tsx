@@ -70,26 +70,25 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
     }
   }, [candidate.videoPath, isHovered, videoUrl])
 
-  // PC（ホバー）とモバイル（タップ）両方に対応した再生制御
+  // PC用：ホバーで再生制御
   useEffect(() => {
     if (videoRef.current) {
-      // ホバー中または再生中なら再生
-      if (isHovered || isPlaying) {
+      if (isHovered) {
         videoRef.current.play().catch(() => {})
-      } else {
+      } else if (!isPlaying) {
+        // ホバー解除時、タップ再生中でなければ停止
         videoRef.current.pause()
         videoRef.current.currentTime = 0
       }
     }
-  }, [isHovered, isPlaying])
+  }, [isHovered])
 
-  // 動画エリアをタップした時の処理（モバイル対応）
+  // モバイル用：タップで再生/停止
   const handleVideoTap = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (deleteMode) return
 
-    // 直接動画を制御する（状態に頼らない）
     if (videoRef.current) {
       if (videoRef.current.paused) {
         videoRef.current.play().catch(() => {})
