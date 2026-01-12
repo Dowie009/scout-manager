@@ -69,32 +69,45 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
     }
   }, [candidate.videoPath, isHovered, videoUrl])
 
+  // PC用：ホバーで再生制御（モバイルはhandleVideoTapで直接制御）
   useEffect(() => {
     if (videoRef.current) {
-      if (isHovered) {
-        // ローカル環境の動画ファイルまたは取得した動画URLを再生
+      // isHovered=falseの場合のみ停止処理（モバイルタップ停止時も含む）
+      if (!isHovered) {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+      }
+      // isHovered=trueの場合、PCホバー時のみ再生
+      // モバイルの場合はhandleVideoTapで既にplay()済みなので、ここでは何もしない
+      // PCホバーの場合のみ再生を試みる（既に再生中なら何もしない）
+      else if (videoRef.current.paused) {
         if (candidate.videoPath.startsWith('http') && videoUrl) {
-          // Vercel環境: 動画URLを直接設定（CORS制限により失敗する可能性あり）
           videoRef.current.src = videoUrl
           videoRef.current.play().catch((err) => {
             console.warn('動画の再生に失敗しました（CORS制限の可能性）:', err)
           })
         } else if (!candidate.videoPath.startsWith('http')) {
-          // ローカル環境: ダウンロード済みの動画ファイルを再生
           videoRef.current.play().catch(() => {})
         }
-      } else {
-        videoRef.current.pause()
-        videoRef.current.currentTime = 0
       }
     }
   }, [isHovered, candidate.videoPath, videoUrl])
 
-  // モバイル用：タップで再生/停止
+  // モバイル用：タップで再生/停止（iOS対策：タップ内で直接play()を呼ぶ）
   const handleVideoTap = () => {
     if (deleteMode) return
-    // タップでisHoveredを切り替える（モバイル対応）
-    setIsHovered(prev => !prev)
+    const video = videoRef.current
+    if (!video) return
+
+    if (video.paused) {
+      // タップ内で直接play()を呼ぶ（iOSはユーザーアクション内でのplay()のみ許可）
+      video.play().catch(() => {})
+      setIsHovered(true)
+    } else {
+      video.pause()
+      video.currentTime = 0
+      setIsHovered(false)
+    }
   }
 
   const handleJudge = async (status: 'contact' | 'stay' | 'pass') => {
