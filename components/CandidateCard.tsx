@@ -23,15 +23,6 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
   const videoRef = useRef<HTMLVideoElement>(null)
   const [videoUrl, setVideoUrl] = useState<string | null>(null) // Vercel環境用の動画URL
   const [videoError, setVideoError] = useState(false) // 動画読み込みエラー
-  const [isLocalEnvironment, setIsLocalEnvironment] = useState(false) // ローカル環境判定
-
-  // 環境判定
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname
-      setIsLocalEnvironment(hostname === 'localhost' || hostname === '127.0.0.1')
-    }
-  }, [])
   
   // YouTube URLかどうかを判定（videoPathまたはurlをチェック）
   const isYouTubeUrl = (): boolean => {
@@ -82,21 +73,12 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
   useEffect(() => {
     if (videoRef.current) {
       if (isHovered) {
-        // ローカル環境の動画ファイルまたは取得した動画URLを再生
-        if (candidate.videoPath.startsWith('http') && videoUrl) {
-          // Vercel環境: 動画URLを直接設定（CORS制限により失敗する可能性あり）
-          videoRef.current.src = videoUrl
-          videoRef.current.play().catch((err) => {
-            console.warn('動画の再生に失敗しました（CORS制限の可能性）:', err)
-          })
-        } else if (!candidate.videoPath.startsWith('http')) {
-          // ローカル環境: ダウンロード済みの動画ファイルを再生
-          // PCブラウザでは音声付き自動再生がブロックされる可能性があるため、
-          // 一旦ミュートで再生を試み、成功したらミュート解除を試みる
+        // ダウンロード済みの動画ファイルを再生（/assets/で始まるパス）
+        if (!candidate.videoPath.startsWith('http')) {
           const video = videoRef.current
           const attemptPlay = async () => {
             try {
-              // まずミュート状態で再生を試みる
+              // まずミュート状態で再生を試みる（ブラウザの自動再生ポリシー対策）
               video.muted = true
               await video.play()
               // 再生成功後、ユーザー設定に応じてミュートを解除
@@ -112,7 +94,7 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
         videoRef.current.currentTime = 0
       }
     }
-  }, [isHovered, candidate.videoPath, videoUrl, isMuted])
+  }, [isHovered, candidate.videoPath, isMuted])
 
   const handleJudge = async (status: 'contact' | 'stay' | 'pass') => {
     if (deleteMode) return // 削除モード中はジャッジできない
@@ -323,8 +305,9 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
             })()}
           </div>
         ) : (
-          // ローカル環境では動画再生、Vercel環境ではサムネイル+TikTokリンク
-          isLocalEnvironment && !videoError ? (
+          // 動画パスがローカルファイル（/assets/で始まる）の場合は動画再生
+          // 動画パスがURL（http）の場合はサムネイル+TikTokリンク
+          !candidate.videoPath.startsWith('http') && !videoError ? (
             <>
               <video
                 ref={videoRef}
@@ -348,9 +331,9 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
               )}
             </>
           ) : (
-            // Vercel環境または動画エラー時: サムネイル + TikTokリンク
+            // 動画ファイルがない場合（URLのみ保存）: サムネイル + TikTokリンク
             <div className="w-full h-full relative">
-              {candidate.iconPath && candidate.iconPath !== '' ? (
+              {candidate.iconPath && candidate.iconPath !== '' && !candidate.iconPath.startsWith('http') ? (
                 <img
                   src={candidate.iconPath}
                   alt={candidate.username}
