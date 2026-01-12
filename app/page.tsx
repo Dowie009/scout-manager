@@ -18,7 +18,7 @@ export default function Home() {
   const [error, setError] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [processedCounts, setProcessedCounts] = useState({ contact: 0, stay: 0, pass: 0 })
-  const [isMuted, setIsMuted] = useState(false) // デフォルトは音声ON
+  const [isMuted, setIsMuted] = useState(true) // デフォルトはミュート（iOS自動再生に必要）
   const [loadingDots, setLoadingDots] = useState('')
   const [deleteMode, setDeleteMode] = useState(false) // 削除モード
   const [selectedIds, setSelectedIds] = useState<string[]>([]) // 選択されたID
@@ -399,7 +399,7 @@ export default function Home() {
       {/* ナビゲーションバー */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.19</span></h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-3">スカウト候補者管理 <span className="text-sm font-normal text-gray-400">v1.0.20</span></h1>
           <div className="flex flex-wrap items-center gap-2">
             <a
               href="/stats"
