@@ -115,8 +115,19 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
 
     if (videoRef.current) {
       if (videoRef.current.paused) {
-        // 再生開始（playingイベントでisPlayingがtrueになる）
-        videoRef.current.play().catch(() => {})
+        // iOS対策：最初は必ずmutedで再生開始
+        const video = videoRef.current
+        const wasMuted = video.muted
+        video.muted = true  // 一時的にミュート
+        video.play()
+          .then(() => {
+            // 再生成功後、元のミュート状態に戻す
+            video.muted = wasMuted
+            setIsPlaying(true)
+          })
+          .catch(() => {
+            video.muted = wasMuted
+          })
       } else {
         videoRef.current.pause()
         setIsPlaying(false)
