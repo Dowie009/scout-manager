@@ -81,14 +81,28 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
           })
         } else if (!candidate.videoPath.startsWith('http')) {
           // ローカル環境: ダウンロード済みの動画ファイルを再生
-          videoRef.current.play().catch(() => {})
+          // PCブラウザでは音声付き自動再生がブロックされる可能性があるため、
+          // 一旦ミュートで再生を試み、成功したらミュート解除を試みる
+          const video = videoRef.current
+          const attemptPlay = async () => {
+            try {
+              // まずミュート状態で再生を試みる
+              video.muted = true
+              await video.play()
+              // 再生成功後、ユーザー設定に応じてミュートを解除
+              video.muted = isMuted
+            } catch (err) {
+              console.warn('動画の自動再生がブロックされました:', err)
+            }
+          }
+          attemptPlay()
         }
       } else {
         videoRef.current.pause()
         videoRef.current.currentTime = 0
       }
     }
-  }, [isHovered, candidate.videoPath, videoUrl])
+  }, [isHovered, candidate.videoPath, videoUrl, isMuted])
 
   const handleJudge = async (status: 'contact' | 'stay' | 'pass') => {
     if (deleteMode) return // 削除モード中はジャッジできない
@@ -305,6 +319,8 @@ function CandidateCard({ candidate, onJudge, onUpdateContactStatus, isMuted, glo
               src={candidate.videoPath}
               muted={isMuted}
               loop
+              playsInline
+              preload="metadata"
               className="w-full h-full object-cover"
             />
             {!isHovered && (

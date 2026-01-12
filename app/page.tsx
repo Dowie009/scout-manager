@@ -18,7 +18,7 @@ export default function Home() {
   const [error, setError] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [processedCounts, setProcessedCounts] = useState({ contact: 0, stay: 0, pass: 0 })
-  const [isMuted, setIsMuted] = useState(true) // デフォルトはミュート
+  const [isMuted, setIsMuted] = useState(false) // デフォルトは音声ON
   const [loadingDots, setLoadingDots] = useState('')
   const [deleteMode, setDeleteMode] = useState(false) // 削除モード
   const [selectedIds, setSelectedIds] = useState<string[]>([]) // 選択されたID
@@ -79,19 +79,30 @@ export default function Home() {
 
   // 候補者の性別別ナンバーを取得（男性は#1から、女性も#1から）
   const getGenderNumber = (candidateId: string, candidateGender?: 'male' | 'female' | 'other' | null): number => {
+    // allCandidatesがまだ読み込まれていない場合、現在のcandidatesから計算を試みる
+    const candidateList = allCandidates.length > 0 ? allCandidates : candidates
+
+    if (candidateList.length === 0) {
+      // まだデータがロードされていない場合は一時的に1を返す
+      return 1
+    }
+
     if (!candidateGender || candidateGender === 'other') {
       // 性別が未設定またはその他の場合、全体の順番を使用
-      const index = allCandidates.findIndex(c => c.id === candidateId)
-      return index >= 0 ? index + 1 : 0
+      const sortedList = [...candidateList].sort((a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      )
+      const index = sortedList.findIndex(c => c.id === candidateId)
+      return index >= 0 ? index + 1 : 1
     }
-    
+
     // 性別が設定されている場合、その性別内での順番を計算
-    const sameGenderCandidates = allCandidates
+    const sameGenderCandidates = candidateList
       .filter(c => c.gender === candidateGender)
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-    
+
     const index = sameGenderCandidates.findIndex(c => c.id === candidateId)
-    return index >= 0 ? index + 1 : 0
+    return index >= 0 ? index + 1 : 1
   }
 
   // 統計情報を計算
